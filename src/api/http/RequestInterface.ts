@@ -6,6 +6,8 @@ export interface RequestInterface
 
     addQueryParam(key: string, value: any): void;
 
+    addQueryParams(params: {[key: string]: any}): void;
+
     setPath(path: string);
 
     setBasePath(basePath: string);

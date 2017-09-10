@@ -4,12 +4,10 @@ import { HttpProvider } from "../../../provider/HttpProvider";
 import { ConfigInterface } from "../api/ConfigInterface";
 import * as ModuleConfig from "../etc/config.json";
 
-export class YoutubeApiProvider extends HttpProvider
-{
+export class YoutubeApiProvider extends HttpProvider {
     private config: ConfigInterface;
 
-    constructor()
-    {
+    constructor() {
         super();
         this.config = (ModuleConfig as any) as ConfigInterface;
     }
@@ -18,28 +16,35 @@ export class YoutubeApiProvider extends HttpProvider
      * @returns {Promise<ResponseInterface>}
      * @memberof ApiProvider
      */
-    public list(): Promise<ResponseInterface>
-    {
+    public list(params: { [key: string]: any } = {}): Promise<ResponseInterface> {
         const request = this.createRequest();
+
         request.setPath(this.config.api.action.list);
-        request.addQueryParam("part", "snippet");
-        request.addQueryParam("chart", "mostPopular");
+        request.addQueryParams(
+            Object.assign(
+                {
+                    chart: "mostPopular",
+                    maxResults: 18,
+                    part: "snippet,contentDetails"
+                },
+                params
+            )
+        );
 
         return this.send(request)
-            .catch( ( reason: any ): any => {
+            .catch((reason: any): any => {
                 return ""
             });
     }
 
-    public search(query: string): Promise<ResponseInterface>
-    {
+    public search(query: string): Promise<ResponseInterface> {
         const request = this.createRequest();
         request.setPath(this.config.api.action.search);
         request.addQueryParam("part", "snippet");
         request.addQueryParam("q", query);
 
         return this.send(request)
-            .catch( ( reason: any ): any => {
+            .catch((reason: any): any => {
                 return ""
             });
     }
@@ -51,8 +56,7 @@ export class YoutubeApiProvider extends HttpProvider
      * @returns {RequestInterface}
      * @memberof YoutubeApiProvider
      */
-    private createRequest(): RequestInterface
-    {
+    private createRequest(): RequestInterface {
         const request: Request = new Request();
         request.setMethod("GET");
         request.setHost(this.config.api.host);

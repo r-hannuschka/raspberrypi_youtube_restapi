@@ -7,7 +7,7 @@ export class List extends AbstractController
     public execute(req: Request, res: Response)
     {
         this.getApi()
-            .list()
+            .list(req.query)
             .then( (apiResponse: ResponseInterface ) => {
                 // @todo define interface
                 const responseData: any = apiResponse.json();

@@ -58,10 +58,13 @@ export class Request implements RequestInterface
      * @param {{key: string, value: any}[]} params
      * @memberof Request
      */
-    public addQueryParams(params: Array<{key: string, value: any}>): void {
-        params.forEach( (param: {key: string, value: any}) => {
-            this.addQueryParam(param.key, param.value);
-        });
+    public addQueryParams(params: {[key: string]: any}): void {
+
+        for (const param in params) {
+            if ( params.hasOwnProperty(param) ) {
+                this.addQueryParam(param, params[param]);
+            }
+        }
     }
 
     /**
