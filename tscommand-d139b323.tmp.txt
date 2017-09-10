@@ -1,0 +1,1 @@
+src/app/lib/api/RouteInterface.ts src/app/lib/controller/AbstractController.ts src/app/lib/index.ts src/app/module/index.ts src/app/module/youtube/controller/IndexController.ts src/app/module/youtube/index.ts src/app/module/youtube/provider/Api.ts src/server.ts --removeComments --rootDir src --target ES6 --module commonjs --outDir ./dist

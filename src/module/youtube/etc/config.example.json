@@ -1,0 +1,11 @@
+{
+    "api": {
+        "host": "https://www.googleapis.com",
+        "key": "<< YOUTUBE API KEY >>",
+        "basePath": "youtube/v3/videos",
+        "action": {
+            "list": "videos",
+            "search": "search"
+        }
+    }
+}

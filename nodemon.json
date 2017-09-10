@@ -1,0 +1,5 @@
+{
+ "events": {
+   "exit": "npm run server:restart"
+ }
+}

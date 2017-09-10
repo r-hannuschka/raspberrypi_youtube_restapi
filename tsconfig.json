@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "commonjs",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "removeComments": false,                 
+    "noUnusedLocals": true,                
+    "noUnusedParameters": false,           
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": false, 
+    "moduleResolution": "node",
+    "typeRoots": [
+      "./node_modules/@types",
+      "./typings.d.ts"
+    ]
+  },
+  "include": [
+    "./src/**/*.ts",
+    "./typings.d.ts"
+  ],
+  "exclude": [
+    "./src/test/**/*.ts"
+  ]
+}

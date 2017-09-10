@@ -1,0 +1,6 @@
+src/module/youtube/etc/config.json
+node_modules
+dist
+.tscache
+tmp
+logs/*
