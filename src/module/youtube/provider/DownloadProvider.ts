@@ -1,5 +1,8 @@
 import * as async from "async";
-import {ChildProcess, fork} from "child_process";
+import { ChildProcess, fork } from "child_process";
+import { IExcecuteAble } from "../../../api/ExecuteAbleInterface";
+import { Channel } from "../../../model/socket/Channel";
+import { SocketManager } from "../../../model/socket/SocketManager";
 import {
     ACTION_DOWNLOAD_END,
     ACTION_DOWNLOAD_PROGRESS,
@@ -13,24 +16,37 @@ interface IDownloadMessage {
     download: IDownload
 }
 
-export class DownloadProvider
-{
+export class DownloadProvider implements IExcecuteAble {
+
     private static instance: DownloadProvider = new DownloadProvider();
 
     private downloadQueue: any;
 
-    public constructor()
-    {
-        if ( DownloadProvider.instance ) {
+    private tasks: Map<string, IDownload>;
+
+    private socketChannel: Channel;
+
+    private socketManager: SocketManager;
+
+    public constructor() {
+
+        if (DownloadProvider.instance) {
             throw new Error("use DownloadProvider::getInstance()");
         }
 
         this.downloadQueue = async.queue(
             (data, done) => {
-                this.runTask(data, done)
+                this.runTask(data, done);
             },
             2
         );
+
+        this.tasks = new Map();
+
+        this.socketManager = SocketManager.getInstance();
+        this.socketChannel = this.socketManager.createChannel();
+        this.socketChannel.setEndpoint( this );
+
         DownloadProvider.instance = this;
     }
 
@@ -41,13 +57,11 @@ export class DownloadProvider
      * @returns
      * @memberof DownloadProvider
      */
-    public static getInstance()
-    {
+    public static getInstance() {
         return DownloadProvider.instance;
     }
 
-    public downloadVideo(data, cb)
-    {
+    public downloadVideo(data) {
         const download: IDownload = {
             isPending: true,
             isRunning: false,
@@ -58,24 +72,50 @@ export class DownloadProvider
             size: 0,
             uri: data.uri
         };
+
+        this.tasks.set(download.pid, download);
         this.downloadQueue.push(download);
+
+        return {
+            download,
+            socket: {
+                channelID: this.socketChannel.getId()
+            }
+        };
     }
 
-    private handleMessage(data: IDownloadMessage): boolean
-    {
+    public execute(data): Promise<any> {
+
+        return new Promise( (resolve, reject) => {
+            resolve("worked");
+        });
+    }
+
+    /**
+     *
+     *
+     * @private
+     * @param {IDownloadMessage} data
+     * @returns {boolean}
+     * @memberof DownloadProvider
+     */
+    private handleMessage(data: IDownloadMessage): boolean {
         let isFinish = false;
 
         // tslint:disable-next-line:switch-default
-        switch ( data.action ) {
+        switch (data.action) {
             case ACTION_DOWNLOAD_END:
+                this.tasks.delete(data.download.pid);
                 isFinish = true;
                 break;
             case ACTION_DOWNLOAD_PROGRESS:
-                break;
             case ACTION_DOWNLOAD_START:
-                console.log ( data.download.size );
+                this.socketChannel.emit(ACTION_DOWNLOAD_START, data.download);
+                this.tasks.set(data.download.pid, data.download)
                 break;
         }
+
+        // send message to socket
 
         return isFinish;
     }
@@ -88,10 +128,10 @@ export class DownloadProvider
      * @param {any} done
      * @memberof DownloadProvider
      */
-    private runTask(data: IDownload, done)
-    {
-        data.isPending = false;
-        data.isRunning = true;
+    private runTask(data: IDownload, done) {
+
+        this.tasks.get(data.pid).isPending = false;
+        this.tasks.get(data.pid).isRunning = true;
 
         const childProcess: ChildProcess = fork(
             `../tasks/download.task`,
@@ -111,8 +151,9 @@ export class DownloadProvider
         );
 
         childProcess.stdout.on("data", (message) => {
-            // not empty
-            console.log(message.toString());
+            // @todo write debug log
+            // tslint:disable-next-line:no-console
+            console.debug(message.toString());
         });
 
         childProcess.stderr.on("data", (error) => {
@@ -123,8 +164,8 @@ export class DownloadProvider
         });
 
         childProcess.on("message", (message: IDownloadMessage) => {
-            if ( this.handleMessage(message) ) {
-                console.log("done");
+            if (this.handleMessage(message)) {
+                childProcess.kill();
                 done();
             }
         });
@@ -135,62 +176,48 @@ export class DownloadProvider
 
 /**
  * @todo remove
- * (function downloadTester() {
  *
- *     const p = DownloadProvider.getInstance();
- *     p.downloadVideo(
- *         {
- *             name: "peppa-pig_2017#116",
- *             path: "/tmp",
- *             uri: "https://www.youtube.com/watch?v=7uXd6evBz-8",
- *         },
- *         () => {
- *             console.log("ich bin fertig");
- *         }
- *     );
- *
- *     p.downloadVideo(
- *         {
- *             name: "peppa_wutz_2017#82",
- *             path: "/tmp",
- *             uri: "https://www.youtube.com/watch?v=r1OT_kNQLg4",
- *         },
- *         () => {
- *             console.log("ich bin fertig");
- *         }
- *     );
- * 
- *     p.downloadVideo(
- *         {
- *             name: "peppa_wutz_2017#135",
- *             path: "/tmp",
- *             uri: "https://www.youtube.com/watch?v=k0-__7HGtd4",
- *         },
- *         () => {
- *             console.log("ich bin fertig");
- *         }
- *     );
- * 
- *     p.downloadVideo(
- *         {
- *             name: "peppa_wutz_2017#104",
- *             path: "/tmp",
- *             uri: "https://www.youtube.com/watch?v=9s9ZjeoWJB0",
- *         },
- *         () => {
- *             console.log("ich bin fertig");
- *         }
- *     );
- * 
- *     p.downloadVideo(
- *         {
- *             name: "peppa_wutz_2017#131",
- *             path: "/tmp",
- *             uri: "https://www.youtube.com/watch?v=oW--lfq19Zk",
- *         },
- *         () => {
- *             console.log("ich bin fertig");
- *         }
- *     );
- * }());
- */
+(function downloadTester() {
+
+    const p = DownloadProvider.getInstance();
+    p.downloadVideo(
+        {
+            name: "peppa-pig_2017#116",
+            path: "/tmp",
+            uri: "https://www.youtube.com/watch?v=7uXd6evBz-8",
+        }
+    );
+
+    p.downloadVideo(
+        {
+            name: "peppa_wutz_2017#82",
+            path: "/tmp",
+            uri: "https://www.youtube.com/watch?v=r1OT_kNQLg4",
+        }
+    );
+
+    p.downloadVideo(
+        {
+            name: "peppa_wutz_2017#135",
+            path: "/tmp",
+            uri: "https://www.youtube.com/watch?v=k0-__7HGtd4",
+        }
+    );
+
+    p.downloadVideo(
+        {
+            name: "peppa_wutz_2017#104",
+            path: "/tmp",
+            uri: "https://www.youtube.com/watch?v=9s9ZjeoWJB0",
+        }
+    );
+
+    p.downloadVideo(
+        {
+            name: "peppa_wutz_2017#131",
+            path: "/tmp",
+            uri: "https://www.youtube.com/watch?v=oW--lfq19Zk",
+        }
+    );
+}());
+*/

@@ -3,7 +3,6 @@ import { IncomingHttpHeaders, IncomingMessage } from "http";
 import * as ytdl from "ytdl-core";
 import {
     ACTION_DOWNLOAD_END,
-    ACTION_DOWNLOAD_PROGRESS,
     ACTION_DOWNLOAD_START,
     IDownload
 } from "../api/Download";

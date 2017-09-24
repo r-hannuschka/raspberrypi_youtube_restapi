@@ -2,16 +2,21 @@
 "use strict";
 
 //module dependencies
-var server    = require("../dist/main");
-var debug     = require("debug")("express:server");
-var http      = require("http");
+var server = require("../dist/main");
+var debug  = require("debug")("express:server");
+var http   = require("http");
 
 //create http server
 var httpPort = normalizePort(process.env.PORT || 8080);
-var app = server.Server.bootstrap().app;
+var server = server.Server.bootstrap();
+
+var app = server.getApp();
 app.set("port", httpPort);
+
 var httpServer = http.createServer(app);
 var socket_io = require('socket.io')(httpServer);
+
+server.addSocketIO(socket_io);
 
 //listen on provided ports
 httpServer.listen(httpPort);

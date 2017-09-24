@@ -3,6 +3,8 @@ import * as cookieParser from "cookie-parser";
 import * as express from "express";
 import * as logger from "morgan";
 import * as path from "path";
+import { SocketIO } from "socket.io";
+import { SocketManager } from "./model/socket/SocketManager";
 
 import errorHandler = require("errorhandler");
 
@@ -16,6 +18,8 @@ import { YoutubeModule } from "./module";
 export class Server {
 
   public app: express.Application;
+
+  public socketIO: SocketIO;
 
   private router: express.Router;
 
@@ -45,6 +49,17 @@ export class Server {
     this.config();
 
     this.initializeModules();
+  }
+
+  public getApp(): Express.Application
+  {
+    return this.app;
+  }
+
+  public addSocketIO(socket)
+  {
+    const socketManager = SocketManager.getInstance();
+    socketManager.setConnection(socket)
   }
 
   /**
