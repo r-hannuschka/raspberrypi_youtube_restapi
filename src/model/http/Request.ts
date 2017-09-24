@@ -89,7 +89,7 @@ export class Request implements RequestInterface
      * @param basePath
      */
     public setBasePath(basePath: string) {
-        this.basePath = basePath;
+        this.basePath = basePath
     }
 
     /**

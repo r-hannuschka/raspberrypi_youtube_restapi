@@ -1,5 +1,5 @@
 import { AbstractModule } from "../AbstractModule";
-import { List, Search } from "./controller";
+import { Download, List, Search } from "./controller";
 
 export class YoutubeModule extends AbstractModule
 {
@@ -60,6 +60,7 @@ export class YoutubeModule extends AbstractModule
     {
         this.registerController("index/list",   new List());
         this.registerController("index/search", new Search());
+        this.registerController("video/download", new Download());
 
         super.bootstrap();
     }
