@@ -1,5 +1,6 @@
 import { AbstractModule } from "../AbstractModule";
-import { Download, List, Search } from "./controller";
+import { List, Search } from "./controller";
+import { DownloadProvider } from "./provider/DownloadProvider";
 
 export class YoutubeModule extends AbstractModule
 {
@@ -60,7 +61,12 @@ export class YoutubeModule extends AbstractModule
     {
         this.registerController("index/list",   new List());
         this.registerController("index/search", new Search());
-        this.registerController("video/download", new Download());
+
+        DownloadProvider
+            .getInstance()
+            .bootstrap({
+                channel: "youtube.download"
+            });
 
         super.bootstrap();
     }

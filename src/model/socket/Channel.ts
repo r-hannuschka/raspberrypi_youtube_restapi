@@ -1,30 +1,20 @@
-import {queue, Queue} from "async";
 import { Client } from "socket.io";
-import { IExcecuteAble } from "../../api/ExecuteAbleInterface";
+import { IEndpoint } from "../../api/EndpointInterface";
 
 export class Channel {
 
     private id: string;
 
-    private endpoint: IExcecuteAble;
-
-    private taskQueue: Queue;
+    private endpoint: IEndpoint;
 
     private clients: Client[];
 
     constructor()
     {
-        this.taskQueue = queue(
-            (data, done) => {
-                this.execute(data, done);
-            },
-            1
-        );
-
         this.clients = [];
     }
 
-    public setEndpoint(endpoint: IExcecuteAble)
+    public setEndpoint(endpoint: IEndpoint)
     {
         this.endpoint = endpoint;
     }
@@ -45,9 +35,14 @@ export class Channel {
      * @param {Client} client
      * @memberof Channel
      */
-    public register(client: Client)
+    public connect(client: Client)
     {
         this.clients.push(client);
+        this.emit(
+            "connect",
+            this.endpoint.onConnected(),
+            client
+        );
     }
 
     /**
@@ -56,7 +51,7 @@ export class Channel {
      * @param {Client} client
      * @memberof Channel
      */
-    public unregister(client: Client)
+    public cancelConnection(client: Client)
     {
         // remove client
         this.clients.splice(
@@ -66,30 +61,27 @@ export class Channel {
     }
 
     /**
-     * send event
-     *
-     * @memberof Channel
-     */
-    public write(data)
-    {
-        this.taskQueue.push(data);
-    }
-
-    /**
      *
      * @param {*} data
      * @memberof Channel
      */
-    public emit(message: string, data: any)
+    public emit(event: string, data: any, receiver?: Client)
     {
-        const body = {
+        const response = {
+            body: {
+                data,
+                event
+            },
             channel: this.getId(),
-            data
         }
 
-        this.clients.forEach( (client: Client) => {
-            client.emit("message", body);
-        });
+        if ( receiver ) {
+            receiver.emit("message", response);
+        } else {
+            this.clients.forEach( (client: Client) => {
+                client.emit("message", response);
+            });
+        }
     }
 
     /**
@@ -100,15 +92,7 @@ export class Channel {
      * @param {any} done
      * @memberof Channel
      */
-    private execute(data, done) {
-        this.endpoint
-            .execute(data)
-            .then((result) => {
-                this.emit("message", result);
-                done();
-            })
-            .catch((error) => {
-                done();
-            });
+    public execute(data) {
+        this.endpoint.execute(data);
     }
 }

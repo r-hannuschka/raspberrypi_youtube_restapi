@@ -1,8 +1,6 @@
 export interface IDownload {
 
-    isPending: boolean;
-
-    isRunning: boolean;
+    state: string;
 
     loaded: number;
 
@@ -17,6 +15,7 @@ export interface IDownload {
     uri: string;
 };
 
-export const ACTION_DOWNLOAD_END = "end";
-export const ACTION_DOWNLOAD_START = "start";
+export const ACTION_DOWNLOAD_QUEUED   = "pending";
+export const ACTION_DOWNLOAD_END      = "end";
+export const ACTION_DOWNLOAD_START    = "start";
 export const ACTION_DOWNLOAD_PROGRESS = "progress";

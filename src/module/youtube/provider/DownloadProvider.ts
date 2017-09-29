@@ -1,11 +1,12 @@
 import * as async from "async";
 import { ChildProcess, fork } from "child_process";
-import { IExcecuteAble } from "../../../api/ExecuteAbleInterface";
+import { IEndpoint } from "../../../api/EndpointInterface";
 import { Channel } from "../../../model/socket/Channel";
 import { SocketManager } from "../../../model/socket/SocketManager";
 import {
     ACTION_DOWNLOAD_END,
     ACTION_DOWNLOAD_PROGRESS,
+    ACTION_DOWNLOAD_QUEUED,
     ACTION_DOWNLOAD_START,
     IDownload
 } from "../api/Download";
@@ -16,7 +17,7 @@ interface IDownloadMessage {
     download: IDownload
 }
 
-export class DownloadProvider implements IExcecuteAble {
+export class DownloadProvider implements IEndpoint {
 
     private static instance: DownloadProvider = new DownloadProvider();
 
@@ -41,13 +42,15 @@ export class DownloadProvider implements IExcecuteAble {
             2
         );
 
+        this.socketManager = SocketManager.getInstance();
         this.tasks = new Map();
 
-        this.socketManager = SocketManager.getInstance();
-        this.socketChannel = this.socketManager.createChannel();
-        this.socketChannel.setEndpoint( this );
-
         DownloadProvider.instance = this;
+    }
+
+    public bootstrap(config) {
+        this.socketChannel = this.socketManager.createChannel(config.channel);
+        this.socketChannel.setEndpoint( this );
     }
 
     /**
@@ -63,17 +66,17 @@ export class DownloadProvider implements IExcecuteAble {
 
     public downloadVideo(data) {
         const download: IDownload = {
-            isPending: true,
-            isRunning: false,
             loaded: 0,
             name: data.name || null,
             path: data.path,
             pid: Math.random().toString(32).substr(2),
             size: 0,
+            state: ACTION_DOWNLOAD_QUEUED,
             uri: data.uri
         };
 
         this.tasks.set(download.pid, download);
+        this.send(ACTION_DOWNLOAD_QUEUED, download);
         this.downloadQueue.push(download);
 
         return {
@@ -84,11 +87,30 @@ export class DownloadProvider implements IExcecuteAble {
         };
     }
 
-    public execute(data): Promise<any> {
+    /**
+     * execute task
+     *
+     * @param task
+     */
+    public execute(task) {
 
-        return new Promise( (resolve, reject) => {
-            resolve("worked");
-        });
+        switch (task.action) {
+            case "download":
+                this.downloadVideo(task.data)
+                break;
+            default:
+        }
+    }
+
+    /**
+     * new client has connected
+     *
+     * @returns IDownloads[]
+     * @memberof DownloadProvider
+     */
+    public onConnected() {
+        return Array.from(
+            this.tasks.values());
     }
 
     /**
@@ -102,22 +124,29 @@ export class DownloadProvider implements IExcecuteAble {
     private handleMessage(data: IDownloadMessage): boolean {
         let isFinish = false;
 
-        // tslint:disable-next-line:switch-default
+        const downloadTask: IDownload = this.tasks.get(data.download.pid);
+
         switch (data.action) {
             case ACTION_DOWNLOAD_END:
+                downloadTask.state = ACTION_DOWNLOAD_END;
                 this.tasks.delete(data.download.pid);
                 isFinish = true;
                 break;
             case ACTION_DOWNLOAD_PROGRESS:
-            case ACTION_DOWNLOAD_START:
-                this.socketChannel.emit(ACTION_DOWNLOAD_START, data.download);
-                this.tasks.set(data.download.pid, data.download)
+                downloadTask.loaded = data.download.loaded;
+                downloadTask.state = ACTION_DOWNLOAD_PROGRESS
                 break;
+            default:
+                downloadTask.size  = data.download.size;
+                downloadTask.state = ACTION_DOWNLOAD_START;
         }
 
-        // send message to socket
-
+        this.send(data.action, downloadTask);
         return isFinish;
+    }
+
+    private send(action: string, download: IDownload) {
+        this.socketChannel.emit(ACTION_DOWNLOAD_START, download);
     }
 
     /**
@@ -129,9 +158,6 @@ export class DownloadProvider implements IExcecuteAble {
      * @memberof DownloadProvider
      */
     private runTask(data: IDownload, done) {
-
-        this.tasks.get(data.pid).isPending = false;
-        this.tasks.get(data.pid).isRunning = true;
 
         const childProcess: ChildProcess = fork(
             `../tasks/download.task`,
@@ -153,7 +179,7 @@ export class DownloadProvider implements IExcecuteAble {
         childProcess.stdout.on("data", (message) => {
             // @todo write debug log
             // tslint:disable-next-line:no-console
-            console.debug(message.toString());
+            console.log(message.toString());
         });
 
         childProcess.stderr.on("data", (error) => {
@@ -173,51 +199,3 @@ export class DownloadProvider implements IExcecuteAble {
         childProcess.send(data);
     }
 }
-
-/**
- * @todo remove
- *
-(function downloadTester() {
-
-    const p = DownloadProvider.getInstance();
-    p.downloadVideo(
-        {
-            name: "peppa-pig_2017#116",
-            path: "/tmp",
-            uri: "https://www.youtube.com/watch?v=7uXd6evBz-8",
-        }
-    );
-
-    p.downloadVideo(
-        {
-            name: "peppa_wutz_2017#82",
-            path: "/tmp",
-            uri: "https://www.youtube.com/watch?v=r1OT_kNQLg4",
-        }
-    );
-
-    p.downloadVideo(
-        {
-            name: "peppa_wutz_2017#135",
-            path: "/tmp",
-            uri: "https://www.youtube.com/watch?v=k0-__7HGtd4",
-        }
-    );
-
-    p.downloadVideo(
-        {
-            name: "peppa_wutz_2017#104",
-            path: "/tmp",
-            uri: "https://www.youtube.com/watch?v=9s9ZjeoWJB0",
-        }
-    );
-
-    p.downloadVideo(
-        {
-            name: "peppa_wutz_2017#131",
-            path: "/tmp",
-            uri: "https://www.youtube.com/watch?v=oW--lfq19Zk",
-        }
-    );
-}());
-*/

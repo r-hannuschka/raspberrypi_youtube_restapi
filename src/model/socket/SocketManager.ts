@@ -33,21 +33,17 @@ export class SocketManager
     }
 
     /**
-     * create a new channel
      *
+     * @param {string} channelID
      * @returns {Channel}
      * @memberof SocketManager
      */
-    public createChannel(): Channel {
+    public createChannel(channelID: string): Channel {
         const channel = new Channel();
-        do {
-            const channelID = Math.random().toString(32).slice(2);
-            if ( ! this.channelMap.has(channelID) ) {
-                channel.setId(channelID);
-                this.channelMap.set(channel.getId(), channel);
-                break;
-            }
-        } while (true);
+        if ( ! this.channelMap.has(channelID) ) {
+            channel.setId(channelID);
+            this.channelMap.set(channel.getId(), channel);
+        }
         return channel;
     }
 
@@ -76,24 +72,26 @@ export class SocketManager
         this.connection.on("connect", (client) => {
             this.clients.push(client);
 
-            client.on("write", (data) => {
-                const channel = this.getChannel(data.channel);
+            client.on("exec", (request) => {
+                const channel: Channel = this.getChannel(request.channel)
+                const task    = request.task;
+
                 if ( channel ) {
-                    channel.write(data.body);
+                    channel.execute(task);
                 }
             });
 
             client.on("register", (id) => {
                 const channel = this.getChannel(id);
                 if ( channel ) {
-                    channel.register(client);
+                    channel.connect(client);
                 }
             });
 
             client.on("unregister", (id) => {
                 const channel = this.getChannel(id);
                 if ( channel ) {
-                    channel.unregister(client);
+                    channel.cancelConnection(client);
                 }
             });
         });

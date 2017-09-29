@@ -3,12 +3,12 @@ import { IncomingHttpHeaders, IncomingMessage } from "http";
 import * as ytdl from "ytdl-core";
 import {
     ACTION_DOWNLOAD_END,
+    ACTION_DOWNLOAD_PROGRESS,
     ACTION_DOWNLOAD_START,
     IDownload
 } from "../api/Download";
 
 let directory: string = "/tmp";
-let download: IDownload;
 let fileName: string = "yt-download";
 let uri: string;
 let fileStream: fs.WriteStream;
@@ -42,7 +42,7 @@ function parseArguments() {
 
 function initDownload(data: IDownload) {
 
-    download = data;
+    const download: IDownload = data;
 
     // send message download started
     fileStream = fs.createWriteStream(`${directory}/${fileName}`);
@@ -62,12 +62,17 @@ function initDownload(data: IDownload) {
         });
     });
 
-    stream.on("progress", (progress) => {
-        /** not empty */
+    stream.on("progress", (chunk, total, size) => {
+
+        download.loaded = total;
+
+        process.send({
+            action: ACTION_DOWNLOAD_PROGRESS,
+            download
+        });
     });
 
     stream.on("end", () => {
-        download.isRunning = false;
         process.send({
             action: ACTION_DOWNLOAD_END,
             download
@@ -87,9 +92,6 @@ function initDownload(data: IDownload) {
     }
 
     process.on("message", (data: IDownload) => {
-        // main method start something super nice
-        console.log(data);
-        data.isRunning = true;
         initDownload(data);
     });
 }());
