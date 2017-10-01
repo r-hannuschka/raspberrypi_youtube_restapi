@@ -4,10 +4,13 @@ import { IEndpoint } from "../../../api/EndpointInterface";
 import { Channel } from "../../../model/socket/Channel";
 import { SocketManager } from "../../../model/socket/SocketManager";
 import {
+    ACTION_DOWNLOAD_CANCEL,
     ACTION_DOWNLOAD_END,
+    ACTION_DOWNLOAD_INITIALIZED,
     ACTION_DOWNLOAD_PROGRESS,
     ACTION_DOWNLOAD_QUEUED,
     ACTION_DOWNLOAD_START,
+    ACTION_DOWNLOAD_UPDATE,
     IDownload
 } from "../api/Download";
 
@@ -23,7 +26,9 @@ export class DownloadProvider implements IEndpoint {
 
     private downloadQueue: any;
 
-    private tasks: Map<string, IDownload>;
+    private downloadTasks: Map<string, IDownload>;
+
+    private processes: Map<string, ChildProcess>
 
     private socketChannel: Channel;
 
@@ -39,11 +44,13 @@ export class DownloadProvider implements IEndpoint {
             (data, done) => {
                 this.runTask(data, done);
             },
-            2
+            1 // max downloads at once
         );
 
         this.socketManager = SocketManager.getInstance();
-        this.tasks = new Map();
+
+        this.processes = new Map();
+        this.downloadTasks = new Map();
 
         DownloadProvider.instance = this;
     }
@@ -75,16 +82,39 @@ export class DownloadProvider implements IEndpoint {
             uri: data.uri
         };
 
-        this.tasks.set(download.pid, download);
-        this.send(ACTION_DOWNLOAD_QUEUED, download);
-        this.downloadQueue.push(download);
+        if ( this.downloadQueue.running() < this.downloadQueue.concurrency ) {
+            download.state = ACTION_DOWNLOAD_START;
+        }
 
-        return {
-            download,
-            socket: {
-                channelID: this.socketChannel.getId()
+        this.downloadTasks.set(download.pid, download);
+
+        this.send(ACTION_DOWNLOAD_INITIALIZED, download);
+        this.downloadQueue.push(download);
+    }
+
+    public cancelDownload(id) {
+        const downloadTask: IDownload = this.downloadTasks.get(id);
+
+        if ( downloadTask ) {
+
+            this.downloadQueue.remove( (download) => {
+                if ( download.data.pid !== id ) {
+                    return false;
+                }
+                // download is not queued anymore
+                if (downloadTask.state !== ACTION_DOWNLOAD_QUEUED) {
+                    return false;
+                }
+                return true;
+            });
+
+            downloadTask.state = ACTION_DOWNLOAD_CANCEL;
+            this.send(ACTION_DOWNLOAD_UPDATE, downloadTask);
+
+            if ( this.processes.has(id) ) {
+                this.processes.get(id).kill("SIGINT");
             }
-        };
+        }
     }
 
     /**
@@ -98,6 +128,9 @@ export class DownloadProvider implements IEndpoint {
             case "download":
                 this.downloadVideo(task.data)
                 break;
+            case "cancel":
+                this.cancelDownload(task.data);
+                break;
             default:
         }
     }
@@ -110,7 +143,7 @@ export class DownloadProvider implements IEndpoint {
      */
     public onConnected() {
         return Array.from(
-            this.tasks.values());
+            this.downloadTasks.values());
     }
 
     /**
@@ -124,12 +157,16 @@ export class DownloadProvider implements IEndpoint {
     private handleMessage(data: IDownloadMessage): boolean {
         let isFinish = false;
 
-        const downloadTask: IDownload = this.tasks.get(data.download.pid);
+        const downloadTask: IDownload = this.downloadTasks.get(data.download.pid);
 
         switch (data.action) {
+            case ACTION_DOWNLOAD_START:
+                downloadTask.state = ACTION_DOWNLOAD_START;
+                downloadTask.size  = data.download.size;
+                break;
             case ACTION_DOWNLOAD_END:
                 downloadTask.state = ACTION_DOWNLOAD_END;
-                this.tasks.delete(data.download.pid);
+                this.downloadTasks.delete(data.download.pid);
                 isFinish = true;
                 break;
             case ACTION_DOWNLOAD_PROGRESS:
@@ -141,12 +178,12 @@ export class DownloadProvider implements IEndpoint {
                 downloadTask.state = ACTION_DOWNLOAD_START;
         }
 
-        this.send(data.action, downloadTask);
+        this.send(ACTION_DOWNLOAD_UPDATE, downloadTask);
         return isFinish;
     }
 
     private send(action: string, download: IDownload) {
-        this.socketChannel.emit(ACTION_DOWNLOAD_START, download);
+        this.socketChannel.emit(action, download);
     }
 
     /**
@@ -157,13 +194,13 @@ export class DownloadProvider implements IEndpoint {
      * @param {any} done
      * @memberof DownloadProvider
      */
-    private runTask(data: IDownload, done) {
+    private runTask(download: IDownload, done) {
 
         const childProcess: ChildProcess = fork(
             `../tasks/download.task`,
             [
-                "--name", data.name,
-                "--uri", data.uri
+                "--name", download.name,
+                "--uri", download.uri
             ], // arguments
             {
                 cwd: __dirname,
@@ -176,26 +213,37 @@ export class DownloadProvider implements IEndpoint {
             }
         );
 
+        this.processes.set(download.pid, childProcess);
+
         childProcess.stdout.on("data", (message) => {
             // @todo write debug log
             // tslint:disable-next-line:no-console
             console.log(message.toString());
         });
 
-        childProcess.stderr.on("data", (error) => {
-            // @todo write error to log
-            console.error(error.toString());
-            childProcess.kill();
-            done();
-        });
-
         childProcess.on("message", (message: IDownloadMessage) => {
             if (this.handleMessage(message)) {
-                childProcess.kill();
-                done();
+                childProcess.kill("SIGINT");
             }
         });
 
-        childProcess.send(data);
+        childProcess.on("error", (message: IDownloadMessage) => {
+            // @todo handle error
+            childProcess.kill("SIGINT");
+        });
+
+        childProcess.on("exit", () => {
+            this.downloadTasks.delete(download.pid);
+            this.processes.delete(download.pid);
+            done();
+        });
+
+        if ( download.state === ACTION_DOWNLOAD_QUEUED ) {
+            download.state = ACTION_DOWNLOAD_START;
+            this.send(ACTION_DOWNLOAD_UPDATE, download);
+        }
+
+        // send message to task
+        childProcess.send(download);
     }
 }
