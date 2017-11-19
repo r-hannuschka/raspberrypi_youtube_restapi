@@ -13,8 +13,11 @@ export class YoutubeApiProvider extends HttpProvider {
     }
 
     /**
+     * get video list from youtube
+     *
+     * @param {{[key: string]: any }} [params={}]
      * @returns {Promise<ResponseInterface>}
-     * @memberof ApiProvider
+     * @memberof YoutubeApiProvider
      */
     public async list(params: {[key: string]: any } = {}): Promise<ResponseInterface> {
         const request = this.createRequest();
@@ -35,6 +38,13 @@ export class YoutubeApiProvider extends HttpProvider {
         return response;
     }
 
+    /**
+     * search youtube for videos
+     *
+     * @param {{ [key: string]: any }} params
+     * @returns {Promise<ResponseInterface>}
+     * @memberof YoutubeApiProvider
+     */
     public async search(params: { [key: string]: any }): Promise<ResponseInterface> {
         const request = this.createRequest();
         request.setPath(this.config.api.action.search);

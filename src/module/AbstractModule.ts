@@ -1,8 +1,7 @@
 import { Request, Response, Router } from "express";
 import { ControllerInterface } from "../api";
-import { IEndpoint } from "../api/EndpointInterface";
-import { SocketManager } from "../model/socket/SocketManager";
 import { ISocketController } from "../api/socket/SocketControllerInterface";
+import { SocketManager } from "../model/socket/SocketManager";
 
 export abstract class AbstractModule
 {
@@ -56,6 +55,7 @@ export abstract class AbstractModule
     }
 
     /**
+     * register socket controller to socket manager and open new channel
      *
      * @param {String} channel
      * @param {ISocketController} controller

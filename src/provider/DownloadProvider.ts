@@ -1,6 +1,5 @@
 import * as async from "async";
 import { ChildProcess, fork } from "child_process";
-import * as Path from "path";
 import { Observable } from "../api/Observable";
 import { Observer } from "../api/Observer";
 import { Logger } from "./Logger";
@@ -90,17 +89,20 @@ export class DownloadProvider implements Observable {
     public initDownload(task: string, param: {[key: string]: any} = {}, group?: string) {
 
         const download: IDownloadTask = {
+            group,
             loaded: 0,
             param,
             pid: Math.random().toString(32).substr(2),
             size: 0,
             state: ACTION_DOWNLOAD_QUEUED,
-            task
+            task,
         };
 
+        /*
         if ( this.downloadQueue.running() < this.downloadQueue.concurrency ) {
             download.state = ACTION_DOWNLOAD_START;
         }
+        */
 
         this.downloadTasks.set(download.pid, download);
 
@@ -140,6 +142,20 @@ export class DownloadProvider implements Observable {
                 this.processes.get(id).kill("SIGINT");
             }
         }
+    }
+
+    /**
+     *
+     * @param {String} groupname
+     */
+    public getDownloads(groupName?: string): IDownloadTask[] {
+        let currentTasks: IDownloadTask[] = Array.from(this.downloadTasks);
+        if ( groupName && groupName.replace(/^\s*(.*?)\s*$/, "").length ) {
+            currentTasks = currentTasks.filter( (task: IDownloadTask) => {
+                return task.group === groupName;
+            });
+        }
+        return currentTasks
     }
 
     /**

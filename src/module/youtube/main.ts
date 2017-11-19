@@ -30,7 +30,7 @@ export class YoutubeModule extends AbstractModule
     {
         this.registerController("index/list",   new List());
         this.registerController("index/search", new Search());
-        this.registerSocketController("youtube.download", new DownloadController());
+        this.registerSocketController( DownloadController.SOCKET_CHANNEL_NAME, new DownloadController());
 
         super.bootstrap();
     }

@@ -38,6 +38,7 @@ export class Channel implements IChannel {
     public connect(client: Client)
     {
         this.clients.push(client);
+
         this.emit(
             "connect",
             this.endpoint.onConnected(),

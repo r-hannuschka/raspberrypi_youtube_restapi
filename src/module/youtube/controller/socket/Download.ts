@@ -5,6 +5,8 @@ import { DownloadProvider } from "../../../../provider/DownloadProvider";
 
 export class DownloadController implements Observer, ISocketController {
 
+    public static readonly SOCKET_CHANNEL_NAME = "youtube.download";
+
     private socketChannel: IChannel;
 
     private downloadProvider: DownloadProvider;
@@ -52,16 +54,14 @@ export class DownloadController implements Observer, ISocketController {
     }
 
     /**
-     * new client has connected
+     * new client has connected to our channel
      *
      * @returns IDownloads[]
      * @memberof DownloadProvider
      */
     public onConnected() {
-        /*
         return Array.from(
-            this.downloadProvider.getDownloads("youtube.download").values());
-            */
+            this.downloadProvider.getDownloads(DownloadController.SOCKET_CHANNEL_NAME));
     }
 
     private createDownload(data) {
@@ -74,6 +74,6 @@ export class DownloadController implements Observer, ISocketController {
 
         const param = { dir, name, uri };
 
-        this.downloadProvider.initDownload(this.taskFile, param, "youtube.download");
+        this.downloadProvider.initDownload(this.taskFile, param, DownloadController.SOCKET_CHANNEL_NAME );
     }
 }
