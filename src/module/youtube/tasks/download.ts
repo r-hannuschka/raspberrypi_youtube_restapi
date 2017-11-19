@@ -1,12 +1,13 @@
 import * as fs from "fs";
 import { IncomingHttpHeaders, IncomingMessage } from "http";
 import * as ytdl from "ytdl-core";
+
 import {
     ACTION_DOWNLOAD_END,
     ACTION_DOWNLOAD_PROGRESS,
     ACTION_DOWNLOAD_START,
-    IDownload
-} from "../api/Download";
+    IDownloadTask
+} from "../../../api/Download";
 
 let directory: string = "/tmp";
 let fileName: string = "yt-download";
@@ -38,19 +39,14 @@ function parseArguments() {
                 break;
         }
     }
-
-    console.log ( directory );
 }
 
-function initDownload(data: IDownload) {
+function initDownload(data: IDownloadTask) {
 
-    const download: IDownload = data;
-
+    const download: IDownloadTask = data;
     // send message download started
     fileStream = fs.createWriteStream(`${directory}/${fileName}`);
-
     const stream = ytdl(uri);
-
     stream.on("response", (response: IncomingMessage) => {
         const headers: IncomingHttpHeaders = response.headers;
         const size: number = parseInt(headers["content-length"] as string, 10);
@@ -85,15 +81,12 @@ function initDownload(data: IDownload) {
 }
 
 (function downloadTask() {
-
     // parse arguments
     parseArguments();
-
     if ( ! uri ) {
         throw new Error("uri not submitted.");
     }
-
-    process.on("message", (data: IDownload) => {
+    process.on("message", (data: IDownloadTask) => {
         initDownload(data);
     });
 }());

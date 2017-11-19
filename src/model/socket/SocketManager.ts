@@ -1,4 +1,5 @@
 import * as SocketIO from "socket.io";
+import { IChannel } from "../../api/socket/";
 import { Channel } from "./Channel";
 
 export class SocketManager
@@ -7,7 +8,7 @@ export class SocketManager
 
     private connection: SocketIO.SocketIO;
 
-    private channelMap: Map<string, Channel>;
+    private channelMap: Map<string, IChannel>;
 
     private clients: SocketIO.Client[];
 
@@ -35,10 +36,10 @@ export class SocketManager
     /**
      *
      * @param {string} channelID
-     * @returns {Channel}
+     * @returns {IChannel}
      * @memberof SocketManager
      */
-    public createChannel(channelID: string): Channel {
+    public createChannel(channelID: string): IChannel {
         const channel = new Channel();
         if ( ! this.channelMap.has(channelID) ) {
             channel.setId(channelID);
@@ -51,10 +52,10 @@ export class SocketManager
      * get existing channel
      *
      * @param {any} name
-     * @returns {Channel}
+     * @returns {IChannel}
      * @memberof SocketManager
      */
-    public getChannel(name): Channel {
+    public getChannel(name): IChannel {
         if ( this.channelMap.has(name) ) {
             return this.channelMap.get(name)
         }
@@ -73,7 +74,7 @@ export class SocketManager
             this.clients.push(client);
 
             client.on("exec", (request) => {
-                const channel: Channel = this.getChannel(request.channel)
+                const channel: IChannel = this.getChannel(request.channel)
                 const task    = request.task;
 
                 if ( channel ) {

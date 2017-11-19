@@ -1,5 +1,8 @@
 import { Request, Response, Router } from "express";
 import { ControllerInterface } from "../api";
+import { IEndpoint } from "../api/EndpointInterface";
+import { SocketManager } from "../model/socket/SocketManager";
+import { ISocketController } from "../api/socket/SocketControllerInterface";
 
 export abstract class AbstractModule
 {
@@ -19,11 +22,13 @@ export abstract class AbstractModule
     private controllerMap: Map<string, ControllerInterface> = new Map();
 
     /**
-     * Creates an instance of AbstractController.
-     * @memberof AbstractController
+     * Creates an instance of AbstractModule.
+     *
+     * @param {Router} router
+     * @memberof AbstractModule
      */
-    constructor() {
-        this.router = Router();
+    constructor(router: Router) {
+        this.router = router;
         this.bootstrap();
     }
 
@@ -48,6 +53,19 @@ export abstract class AbstractModule
         if ( ! this.controllerMap.has(route) ) {
             this.controllerMap.set(route, controller);
         }
+    }
+
+    /**
+     *
+     * @param {String} channel
+     * @param {ISocketController} controller
+     */
+    protected registerSocketController(channel: string, controller: ISocketController)
+    {
+        const socketManager = SocketManager.getInstance();
+        const socketChannel = socketManager.createChannel(channel);
+        socketChannel.setEndpoint( controller );
+        controller.setChannel(socketChannel);
     }
 
     /**

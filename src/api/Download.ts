@@ -1,18 +1,16 @@
-export interface IDownload {
+export interface IDownloadTask {
 
     state: string;
 
     loaded: number;
 
-    name: string;
-
-    path: string;
+    param: {[key: string]: any};
 
     pid: string;
 
     size: number;
 
-    uri: string;
+    task: string;
 };
 
 export const ACTION_DOWNLOAD_CANCEL      = "canceled";

@@ -1,7 +1,7 @@
 import { Client } from "socket.io";
-import { IEndpoint } from "../../api/EndpointInterface";
+import { IChannel, IEndpoint } from "../../api/socket/";
 
-export class Channel {
+export class Channel implements IChannel {
 
     private id: string;
 

@@ -8,7 +8,7 @@ import { SocketManager } from "./model/socket/SocketManager";
 
 import errorHandler = require("errorhandler");
 
-import { YoutubeModule } from "./module";
+import { FilemanagerModule, YoutubeModule } from "./module";
 
 /**
  * The server.
@@ -110,11 +110,8 @@ export class Server {
     this.app.use(errorHandler());
   }
 
-  /**
-   * load module routes
-   */
   private initializeModules() {
-
-    this.app.use(YoutubeModule.getInstance().getRouter());
+    new YoutubeModule( this.router );
+    new FilemanagerModule( this.router );
   }
 }

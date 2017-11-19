@@ -1,6 +1,6 @@
 import { AbstractModule } from "../AbstractModule";
 import { List, Search } from "./controller";
-import { DownloadProvider } from "./provider/DownloadProvider";
+import { DownloadController } from "./controller/socket/Download";
 
 export class YoutubeModule extends AbstractModule
 {
@@ -10,37 +10,6 @@ export class YoutubeModule extends AbstractModule
      * @memberof YoutubeModule
      */
     public static readonly MODULE_NAME: string = "youtube";
-
-    /**
-     * @private
-     * @static
-     * @type {YoutubeModule}
-     * @memberof YoutubeModule
-     */
-    private static instance: YoutubeModule = new YoutubeModule();
-
-    /**
-     * @static
-     * @returns {YoutubeModule}
-     * @memberof YoutubeModule
-     */
-    public static getInstance(): YoutubeModule
-    {
-        return this.instance;
-    }
-
-    /**
-     * Creates an instance of YoutubeModule.
-     * @memberof YoutubeModule
-     */
-    constructor()
-    {
-        if (YoutubeModule.instance) {
-            throw new Error("Error: Instantiation failed: Use SingletonDemo.getInstance() instead of new.");
-        }
-        super();
-        YoutubeModule.instance = this;
-    }
 
     /**
      *
@@ -61,12 +30,7 @@ export class YoutubeModule extends AbstractModule
     {
         this.registerController("index/list",   new List());
         this.registerController("index/search", new Search());
-
-        DownloadProvider
-            .getInstance()
-            .bootstrap({
-                channel: "youtube.download"
-            });
+        this.registerSocketController("youtube.download", new DownloadController());
 
         super.bootstrap();
     }

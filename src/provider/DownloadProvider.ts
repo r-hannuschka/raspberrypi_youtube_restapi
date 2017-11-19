@@ -1,9 +1,9 @@
 import * as async from "async";
 import { ChildProcess, fork } from "child_process";
-import { IEndpoint } from "../../../api/EndpointInterface";
-import { Channel } from "../../../model/socket/Channel";
-import { SocketManager } from "../../../model/socket/SocketManager";
-import { Logger } from "../../../provider/Logger";
+import * as Path from "path";
+import { Observable } from "../api/Observable";
+import { Observer } from "../api/Observer";
+import { Logger } from "./Logger";
 
 import {
     ACTION_DOWNLOAD_CANCEL,
@@ -13,32 +13,28 @@ import {
     ACTION_DOWNLOAD_QUEUED,
     ACTION_DOWNLOAD_START,
     ACTION_DOWNLOAD_UPDATE,
-    IDownload
+    IDownloadTask
 } from "../api/Download";
 
 interface IDownloadMessage {
     action: string,
 
-    download: IDownload
+    download: IDownloadTask
 }
 
-export class DownloadProvider implements IEndpoint {
-
-    private static instance: DownloadProvider = new DownloadProvider();
+export class DownloadProvider implements Observable {
 
     private downloadQueue: any;
 
-    private downloadTasks: Map<string, IDownload>;
+    private downloadTasks: Map<string, IDownloadTask>;
 
     private processes: Map<string, ChildProcess>
 
-    private socketChannel: Channel;
-
-    private socketManager: SocketManager;
-
     private logService: Logger;
 
-    public static readonly YOUTUBE_URL_TEMPLATE = "www.youtube.com/watch?v=";
+    private observers: Observer[] = [];
+
+    private static readonly instance: DownloadProvider = new DownloadProvider();
 
     public constructor() {
 
@@ -55,43 +51,51 @@ export class DownloadProvider implements IEndpoint {
             1 // max downloads at once
         );
 
-        this.socketManager = SocketManager.getInstance();
-
         this.processes = new Map();
         this.downloadTasks = new Map();
-
-        DownloadProvider.instance = this;
     }
 
-    public bootstrap(config) {
-        this.socketChannel = this.socketManager.createChannel(config.channel);
-        this.socketChannel.setEndpoint( this );
+    public static getInstance(): DownloadProvider {
+        return DownloadProvider.instance;
     }
 
     /**
      *
-     * @static
-     * @returns
-     * @memberof DownloadProvider
+     * @param {Observer} observer
      */
-    public static getInstance() {
-        return DownloadProvider.instance;
+    public subscribe(observer: Observer) {
+        if ( this.observers.indexOf(observer) === -1 ) {
+            this.observers.push(observer);
+        }
     }
 
-    public downloadVideo(data) {
+    /**
+     *
+     * @param {Observer} observer
+     */
+    public unsubscribe(observer: Observer) {
+        const index = this.observers.indexOf(observer)
+        if ( index !== -1 ) {
+            this.observers.splice(index, 1);
+        }
+    }
 
-        const uri  = `${DownloadProvider.YOUTUBE_URL_TEMPLATE}${data.id}`;
-        const path = "/media/youtube_videos";
-        const name = `${data.name.replace(/\s/g, "_")}.mp4`;
+    /**
+     *
+     *
+     * @param {any} data
+     * @param {string} task
+     * @memberof DownloadProvider
+     */
+    public initDownload(task: string, param: {[key: string]: any} = {}, group?: string) {
 
-        const download: IDownload = {
+        const download: IDownloadTask = {
             loaded: 0,
-            name,
-            path,
+            param,
             pid: Math.random().toString(32).substr(2),
             size: 0,
             state: ACTION_DOWNLOAD_QUEUED,
-            uri
+            task
         };
 
         if ( this.downloadQueue.running() < this.downloadQueue.concurrency ) {
@@ -109,11 +113,15 @@ export class DownloadProvider implements IEndpoint {
         this.downloadQueue.push(download);
     }
 
+    /**
+     *
+     *
+     * @param {any} id
+     * @memberof DownloadProvider
+     */
     public cancelDownload(id) {
-        const downloadTask: IDownload = this.downloadTasks.get(id);
-
+        const downloadTask: IDownloadTask = this.downloadTasks.get(id);
         if ( downloadTask ) {
-
             this.downloadQueue.remove( (download) => {
                 if ( download.data.pid !== id ) {
                     return false;
@@ -135,35 +143,6 @@ export class DownloadProvider implements IEndpoint {
     }
 
     /**
-     * execute task
-     *
-     * @param task
-     */
-    public execute(task) {
-
-        switch (task.action) {
-            case "download":
-                this.downloadVideo(task.data)
-                break;
-            case "cancel":
-                this.cancelDownload(task.data);
-                break;
-            default:
-        }
-    }
-
-    /**
-     * new client has connected
-     *
-     * @returns IDownloads[]
-     * @memberof DownloadProvider
-     */
-    public onConnected() {
-        return Array.from(
-            this.downloadTasks.values());
-    }
-
-    /**
      *
      *
      * @private
@@ -174,7 +153,7 @@ export class DownloadProvider implements IEndpoint {
     private handleMessage(data: IDownloadMessage): boolean {
         let isFinish = false;
 
-        const downloadTask: IDownload = this.downloadTasks.get(data.download.pid);
+        const downloadTask: IDownloadTask = this.downloadTasks.get(data.download.pid);
 
         switch (data.action) {
             case ACTION_DOWNLOAD_START:
@@ -209,8 +188,16 @@ export class DownloadProvider implements IEndpoint {
         return isFinish;
     }
 
-    private send(action: string, download: IDownload) {
-        this.socketChannel.emit(action, download);
+    /**
+     *
+     * @param action
+     * @param download
+     */
+    private send(action: string, download: IDownloadTask) {
+        // notify Observers
+        this.observers.forEach( (observer: Observer) => {
+            observer.notify(action, Object.assign({}, download));
+        });
     }
 
     /**
@@ -221,17 +208,13 @@ export class DownloadProvider implements IEndpoint {
      * @param {any} done
      * @memberof DownloadProvider
      */
-    private runTask(download: IDownload, done) {
+    private runTask(download: IDownloadTask, done) {
 
+        const taskParameter = this.createTaskParameters(download.param);
         const childProcess: ChildProcess = fork(
-            `../tasks/download.task`,
-            [
-                "--dir", download.path,
-                "--name", download.name,
-                "--uri", download.uri
-            ], // arguments
+            download.task,
+            taskParameter,
             {
-                cwd: __dirname,
                 stdio: [
                     "pipe",
                     "pipe",
@@ -283,5 +266,23 @@ export class DownloadProvider implements IEndpoint {
 
         // send message to task
         childProcess.send(download);
+    }
+
+    /**
+     * convert params from object to array
+     *
+     * @param params
+     */
+    private createTaskParameters(params: {[key: string]: any}): any[] {
+        let flattenParams = [];
+        for (const key in params) {
+            if (params.hasOwnProperty(key)) {
+                flattenParams = flattenParams.concat([
+                    `--${key}`,
+                    params[key]
+                ]);
+            }
+        }
+        return flattenParams;
     }
 }
