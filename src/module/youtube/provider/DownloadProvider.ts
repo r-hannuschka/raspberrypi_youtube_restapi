@@ -3,6 +3,8 @@ import { ChildProcess, fork } from "child_process";
 import { IEndpoint } from "../../../api/EndpointInterface";
 import { Channel } from "../../../model/socket/Channel";
 import { SocketManager } from "../../../model/socket/SocketManager";
+import { Logger } from "../../../provider/Logger";
+
 import {
     ACTION_DOWNLOAD_CANCEL,
     ACTION_DOWNLOAD_END,
@@ -34,11 +36,17 @@ export class DownloadProvider implements IEndpoint {
 
     private socketManager: SocketManager;
 
+    private logService: Logger;
+
+    public static readonly YOUTUBE_URL_TEMPLATE = "www.youtube.com/watch?v=";
+
     public constructor() {
 
         if (DownloadProvider.instance) {
             throw new Error("use DownloadProvider::getInstance()");
         }
+
+        this.logService = Logger.getInstance();
 
         this.downloadQueue = async.queue(
             (data, done) => {
@@ -62,7 +70,6 @@ export class DownloadProvider implements IEndpoint {
 
     /**
      *
-     *
      * @static
      * @returns
      * @memberof DownloadProvider
@@ -72,14 +79,19 @@ export class DownloadProvider implements IEndpoint {
     }
 
     public downloadVideo(data) {
+
+        const uri  = `${DownloadProvider.YOUTUBE_URL_TEMPLATE}${data.id}`;
+        const path = "/media/youtube_videos";
+        const name = `${data.name.replace(/\s/g, "_")}.mp4`;
+
         const download: IDownload = {
             loaded: 0,
-            name: data.name || null,
-            path: data.path,
+            name,
+            path,
             pid: Math.random().toString(32).substr(2),
             size: 0,
             state: ACTION_DOWNLOAD_QUEUED,
-            uri: data.uri
+            uri
         };
 
         if ( this.downloadQueue.running() < this.downloadQueue.concurrency ) {
@@ -87,6 +99,11 @@ export class DownloadProvider implements IEndpoint {
         }
 
         this.downloadTasks.set(download.pid, download);
+
+        this.logService.log(
+            Logger.LOG_DEBUG,
+            `initialize download: ${JSON.stringify(download)}`
+        );
 
         this.send(ACTION_DOWNLOAD_INITIALIZED, download);
         this.downloadQueue.push(download);
@@ -163,11 +180,21 @@ export class DownloadProvider implements IEndpoint {
             case ACTION_DOWNLOAD_START:
                 downloadTask.state = ACTION_DOWNLOAD_START;
                 downloadTask.size  = data.download.size;
+
+                this.logService.log(
+                    Logger.LOG_DEBUG,
+                    `start download: ${JSON.stringify(data.download)}`
+                );
                 break;
             case ACTION_DOWNLOAD_END:
                 downloadTask.state = ACTION_DOWNLOAD_END;
                 this.downloadTasks.delete(data.download.pid);
                 isFinish = true;
+
+                this.logService.log(
+                    Logger.LOG_DEBUG,
+                    `finish download: ${JSON.stringify(data.download) }`
+                );
                 break;
             case ACTION_DOWNLOAD_PROGRESS:
                 downloadTask.loaded = data.download.loaded;
@@ -199,6 +226,7 @@ export class DownloadProvider implements IEndpoint {
         const childProcess: ChildProcess = fork(
             `../tasks/download.task`,
             [
+                "--dir", download.path,
                 "--name", download.name,
                 "--uri", download.uri
             ], // arguments
@@ -216,9 +244,10 @@ export class DownloadProvider implements IEndpoint {
         this.processes.set(download.pid, childProcess);
 
         childProcess.stdout.on("data", (message) => {
-            // @todo write debug log
-            // tslint:disable-next-line:no-console
-            console.log(message.toString());
+            this.logService.log(
+                Logger.LOG_DEBUG,
+                `task message: ${message}`
+            );
         });
 
         childProcess.on("message", (message: IDownloadMessage) => {
@@ -228,7 +257,10 @@ export class DownloadProvider implements IEndpoint {
         });
 
         childProcess.on("error", (message: IDownloadMessage) => {
-            // @todo handle error
+            this.logService.log(
+                Logger.LOG_DEBUG,
+                `task message: ${message}`
+            );
             childProcess.kill("SIGINT");
         });
 
@@ -239,6 +271,12 @@ export class DownloadProvider implements IEndpoint {
         });
 
         if ( download.state === ACTION_DOWNLOAD_QUEUED ) {
+
+            this.logService.log(
+                Logger.LOG_DEBUG,
+                `download start: ${JSON.stringify(download)}`
+            );
+
             download.state = ACTION_DOWNLOAD_START;
             this.send(ACTION_DOWNLOAD_UPDATE, download);
         }

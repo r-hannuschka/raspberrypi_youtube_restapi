@@ -38,6 +38,8 @@ function parseArguments() {
                 break;
         }
     }
+
+    console.log ( directory );
 }
 
 function initDownload(data: IDownload) {

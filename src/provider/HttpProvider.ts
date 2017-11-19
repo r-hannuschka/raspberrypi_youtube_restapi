@@ -54,7 +54,8 @@ export class HttpProvider {
             response = this.handleError(error, request, responseData);
         }
 
-        return Promise.resolve(response);
+        return response;
+        // return Promise.resolve(response);
     }
 
     /**

@@ -16,7 +16,7 @@ export class YoutubeApiProvider extends HttpProvider {
      * @returns {Promise<ResponseInterface>}
      * @memberof ApiProvider
      */
-    public list(params: { [key: string]: any } = {}): Promise<ResponseInterface> {
+    public async list(params: {[key: string]: any } = {}): Promise<ResponseInterface> {
         const request = this.createRequest();
 
         request.setPath(this.config.api.action.list);
@@ -31,22 +31,25 @@ export class YoutubeApiProvider extends HttpProvider {
             )
         );
 
-        return this.send(request)
-            .catch((reason: any): any => {
-                return ""
-            });
+        const response = await this.send(request);
+        return response;
     }
 
-    public search(query: string): Promise<ResponseInterface> {
+    public async search(params: { [key: string]: any }): Promise<ResponseInterface> {
         const request = this.createRequest();
         request.setPath(this.config.api.action.search);
-        request.addQueryParam("part", "snippet");
-        request.addQueryParam("q", query);
-
-        return this.send(request)
-            .catch((reason: any): any => {
-                return ""
-            });
+        request.addQueryParams(
+            Object.assign(
+                {
+                    maxResults: 18,
+                    part: "snippet",
+                    type: "video",
+                },
+                params
+            )
+        );
+        const response = await this.send(request);
+        return response;
     }
 
     /**
