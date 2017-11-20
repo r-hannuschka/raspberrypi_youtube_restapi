@@ -149,7 +149,7 @@ export class DownloadProvider implements Observable {
      * @param {String} groupname
      */
     public getDownloads(groupName?: string): IDownloadTask[] {
-        let currentTasks: IDownloadTask[] = Array.from(this.downloadTasks);
+        let currentTasks: IDownloadTask[] = Array.from(this.downloadTasks.values());
         if ( groupName && groupName.replace(/^\s*(.*?)\s*$/, "").length ) {
             currentTasks = currentTasks.filter( (task: IDownloadTask) => {
                 return task.group === groupName;
