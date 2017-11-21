@@ -1,6 +1,14 @@
 export interface IDownloadTask {
 
     /**
+     *
+     *
+     * @type {string}
+     * @memberof IDownloadTask
+     */
+    error?: string;
+
+    /**
      * group downloads by name to filter them
      *
      * @type {string}
@@ -57,10 +65,11 @@ export interface IDownloadTask {
     task: string;
 };
 
-export const ACTION_DOWNLOAD_CANCEL      = "canceled";
-export const ACTION_DOWNLOAD_END         = "finished";
-export const ACTION_DOWNLOAD_INITIALIZED = "initialized";
-export const ACTION_DOWNLOAD_QUEUED      = "pending";
-export const ACTION_DOWNLOAD_PROGRESS    = "progressing";
-export const ACTION_DOWNLOAD_START       = "starting";
-export const ACTION_DOWNLOAD_UPDATE      = "update";
+export const DOWNLOAD_STATE_CANCEL      = "cancel";
+export const DOWNLOAD_STATE_END         = "end";
+export const DOWNLOAD_STATE_ERROR       = "error";
+export const DOWNLOAD_STATE_INITIALIZED = "initialized";
+export const DOWNLOAD_STATE_PROGRESS    = "progress";
+export const DOWNLOAD_STATE_QUEUED      = "queued";
+export const DOWNLOAD_STATE_START       = "start";
+export const DOWNLOAD_STATE_UPDATE      = "update";

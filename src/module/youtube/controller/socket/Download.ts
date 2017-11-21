@@ -18,6 +18,7 @@ export class DownloadController implements Observer, ISocketController {
         this.downloadProvider.subscribe(this);
         this.taskFile = Path.resolve(__dirname, "../../tasks/download");
     }
+
     /**
      * called from Socket Manager
      *

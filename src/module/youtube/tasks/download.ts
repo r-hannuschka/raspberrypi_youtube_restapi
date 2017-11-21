@@ -1,92 +1,157 @@
 import * as fs from "fs";
 import { IncomingHttpHeaders, IncomingMessage } from "http";
 import * as ytdl from "ytdl-core";
+import { debounce } from "../../../util/debounce.decorator";
 
-import {
-    ACTION_DOWNLOAD_END,
-    ACTION_DOWNLOAD_PROGRESS,
-    ACTION_DOWNLOAD_START,
-    IDownloadTask
-} from "../../../api/Download";
+class DownloadTask {
 
-let directory: string = "/tmp";
-let fileName: string = "yt-download";
-let uri: string;
-let fileStream: fs.WriteStream;
+    /**
+     * codes should send to DownloadProvider
+     */
+    public static readonly DOWNLOAD_STATE_END = "end";
+    public static readonly DOWNLOAD_STATE_ERROR = "error";
+    public static readonly DOWNLOAD_STATE_PROGRESS = "progress";
+    public static readonly DOWNLOAD_STATE_START = "start";
 
-/**
- * parse process arguments
- */
-function parseArguments() {
+    private directory: string = "/tmp";
+    private fileName: string = "yt-download";
+    private uri: string;
+    private fileStream: fs.WriteStream;
 
-    const args = process.argv.slice(2);
+    private processId: string;
 
-    for (let i = 0, ln = args.length; i < ln; i++) {
+    /**
+     * initialize download task
+     *
+     * @memberof DownloadTask
+     */
+    public initialize() {
+        this.loadProcessParameters();
+        process.on("message", (id) => {
+            this.processId = id;
 
-        // tslint:disable-next-line:switch-default
-        switch (args[i]) {
-            case "--dir":
-                i++;
-                directory = args[i];
-                break;
-            case "--name":
-                i++;
-                fileName = args[i];
-                break;
-            case "--uri":
-                i++;
-                uri = args[i];
-                break;
+            this.initializeDownload()
+                .then(() => {
+                    this.processDownload();
+                })
+                .catch((error) => {
+                    process.send({
+                        error,
+                        processId: this.processId,
+                        state: DownloadTask.DOWNLOAD_STATE_ERROR,
+                    });
+                    process.exit(1);
+                });
+        });
+    }
+
+    /**
+     * processing download
+     */
+    public processDownload() {
+        // create file for download
+        this.fileStream = fs.createWriteStream(`${this.directory}/${this.fileName}`);
+
+        // create youtube download stream
+        const stream = ytdl(this.uri);
+        stream.on("response", this.onResponse.bind(this));
+        stream.on("progress", this.onProgress.bind(this));
+        stream.on("end",      this.onEnd.bind(this));
+        stream.pipe(this.fileStream);
+    }
+
+    /**
+     * parse process arguments
+     */
+    private loadProcessParameters() {
+
+        const args = process.argv.slice(2);
+
+        for (let i = 0, ln = args.length; i < ln; i++) {
+
+            // tslint:disable-next-line:switch-default
+            switch (args[i]) {
+                case "--dir":
+                    i++;
+                    this.directory = args[i];
+                    break;
+                case "--name":
+                    i++;
+                    this.fileName = args[i];
+                    break;
+                case "--uri":
+                    i++;
+                    this.uri = args[i];
+                    break;
+            }
         }
     }
-}
 
-function initDownload(data: IDownloadTask) {
-
-    const download: IDownloadTask = data;
-    // send message download started
-    fileStream = fs.createWriteStream(`${directory}/${fileName}`);
-    const stream = ytdl(uri);
-    stream.on("response", (response: IncomingMessage) => {
-        const headers: IncomingHttpHeaders = response.headers;
-        const size: number = parseInt(headers["content-length"] as string, 10);
-
-        data.loaded = 0;
-        data.size = size;
-
-        process.send({
-            action: ACTION_DOWNLOAD_START,
-            download
-        });
-    });
-
-    stream.on("progress", (chunk, total, size) => {
-
-        download.loaded = total;
-
-        process.send({
-            action: ACTION_DOWNLOAD_PROGRESS,
-            download
-        });
-    });
-
-    stream.on("end", () => {
-        process.send({
-            action: ACTION_DOWNLOAD_END,
-            download
-        })
-    });
-
-    stream.pipe(fileStream);
-}
-
-(function downloadTask() {
-    // parse arguments
-    parseArguments();
-    if ( ! uri ) {
-        throw new Error("uri not submitted.");
+    /**
+     * try to load meta informations from the video
+     *
+     * @returns {boolean}
+     */
+    private async initializeDownload() {
+        try {
+            await ytdl.getInfo(this.uri);
+        } catch (exception) {
+            return Promise.reject(exception.message);
+        }
+        return Promise.resolve();
     }
-    process.on("message", (data: IDownloadTask) => {
-        initDownload(data);
-    });
-}());
+
+    /**
+     * video response has been found and start downloading
+     *
+     * @param {IncomingMessage} response
+     */
+    private onResponse(response: IncomingMessage) {
+
+        const headers: IncomingHttpHeaders = response.headers;
+        const total: number = parseInt(headers["content-length"] as string, 10);
+
+        process.send({
+            data: {
+                loaded: 0,
+                total
+            },
+            processId: this.processId,
+            state: DownloadTask.DOWNLOAD_STATE_START,
+        });
+    }
+
+    /**
+     * download in progress
+     *
+     * @param {number} chunk length
+     * @param {number} loaded downloaded total
+     * @param {number} size total size
+     */
+    @debounce({delay: 500})
+    private onProgress(chunk: number, loaded: number, total: number) {
+        process.send({
+            data: {
+                loaded,
+                total
+            },
+            processId: this.processId,
+            state: DownloadTask.DOWNLOAD_STATE_PROGRESS,
+        });
+    };
+
+    /**
+     * download has finished
+     */
+    private onEnd() {
+        process.send({
+            data: {},
+            processId: this.processId,
+            state: DownloadTask.DOWNLOAD_STATE_END,
+        });
+        process.exit(0);
+    };
+}
+
+const downloadTask: DownloadTask = new DownloadTask();
+downloadTask.initialize();
