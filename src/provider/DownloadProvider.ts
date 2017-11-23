@@ -8,8 +8,6 @@ import {
     DOWNLOAD_STATE_CANCEL,
     DOWNLOAD_STATE_END,
     DOWNLOAD_STATE_ERROR,
-    DOWNLOAD_STATE_INITIALIZED,
-    DOWNLOAD_STATE_PROGRESS,
     DOWNLOAD_STATE_QUEUED,
     DOWNLOAD_STATE_START,
     DOWNLOAD_STATE_UPDATE,
@@ -52,7 +50,7 @@ export class DownloadProvider implements Observable {
             (data, done) => {
                 this.runTask(data, done);
             },
-            1 // max downloads at once
+            2 // max downloads at once
         );
 
         this.processes = new Map();
@@ -68,7 +66,7 @@ export class DownloadProvider implements Observable {
      * @param {Observer} observer
      */
     public subscribe(observer: Observer) {
-        if ( this.observers.indexOf(observer) === -1 ) {
+        if (this.observers.indexOf(observer) === -1) {
             this.observers.push(observer);
         }
     }
@@ -79,7 +77,7 @@ export class DownloadProvider implements Observable {
      */
     public unsubscribe(observer: Observer) {
         const index = this.observers.indexOf(observer)
-        if ( index !== -1 ) {
+        if (index !== -1) {
             this.observers.splice(index, 1);
         }
     }
@@ -91,7 +89,7 @@ export class DownloadProvider implements Observable {
      * @param {string} task
      * @memberof DownloadProvider
      */
-    public initDownload(task: string, param: {[key: string]: any} = {}, group?: string) {
+    public initDownload(task: string, param: { [key: string]: any } = {}, group?: string) {
 
         const download: IDownloadTask = {
             group,
@@ -110,7 +108,9 @@ export class DownloadProvider implements Observable {
             `initialize download: ${JSON.stringify(download)}`
         );
 
-        this.send(DOWNLOAD_STATE_INITIALIZED, download);
+        download.state = DOWNLOAD_STATE_QUEUED;
+        this.updateDownload(download);
+
         this.downloadQueue.push(download);
     }
 
@@ -122,22 +122,21 @@ export class DownloadProvider implements Observable {
      */
     public cancelDownload(id) {
         const task: IDownloadTask = this.downloadTasks.get(id);
-        if ( !task ) {
+        if (!task) {
             return;
         }
 
-        if ( task.state === DOWNLOAD_STATE_QUEUED ) {
-            this.downloadQueue.remove( (download) => {
-                if ( download.data.pid !== id ) {
+        if (task.state === DOWNLOAD_STATE_QUEUED) {
+            this.downloadQueue.remove((download) => {
+                if (download.data.pid !== id) {
                     return false;
                 }
                 return true;
             });
         };
 
-        this.stopDownloadProcess(task);
         task.state = DOWNLOAD_STATE_CANCEL;
-        this.send(DOWNLOAD_STATE_UPDATE, task);
+        this.updateDownload(task);
     }
 
     /**
@@ -146,8 +145,8 @@ export class DownloadProvider implements Observable {
      */
     public getDownloads(groupName?: string): IDownloadTask[] {
         let currentTasks: IDownloadTask[] = Array.from(this.downloadTasks.values());
-        if ( groupName && groupName.replace(/^\s*(.*?)\s*$/, "$1").length ) {
-            currentTasks = currentTasks.filter( (task: IDownloadTask) => {
+        if (groupName && groupName.replace(/^\s*(.*?)\s*$/, "$1").length) {
+            currentTasks = currentTasks.filter((task: IDownloadTask) => {
                 return task.group === groupName;
             });
         }
@@ -159,51 +158,22 @@ export class DownloadProvider implements Observable {
      *
      * @private
      * @param {IDownloadMessage} data
-     * @returns {boolean}
      * @memberof DownloadProvider
      */
-    private handleDownloadResponse(response: IDownloadMessage) {
+     private updateDownload(task: IDownloadTask): void {
 
-        const downloadTask: IDownloadTask = this.downloadTasks.get(response.processId);
-        let debugMessage: string = "";
+        if (task.state === DOWNLOAD_STATE_CANCEL ||
+            task.state === DOWNLOAD_STATE_ERROR ||
+            task.state === DOWNLOAD_STATE_END) {
 
-        // set current download state
-        downloadTask.state = response.state || DOWNLOAD_STATE_ERROR;
+            if ( this.processes.has(task.pid) ) {
+                this.processes.get(task.pid).kill("SIGINT");
+            }
 
-        switch (response.state) {
-            case DOWNLOAD_STATE_END:
-                debugMessage = `finish download: ${JSON.stringify(downloadTask) }`
-                break;
-
-            case DOWNLOAD_STATE_PROGRESS:
-                downloadTask.loaded = response.data.loaded;
-                // debugMessage = `loaded: ${downloadTask.loaded}`;
-                break;
-
-            case DOWNLOAD_STATE_START:
-                downloadTask.size = response.data.total;
-                downloadTask.state = DOWNLOAD_STATE_START;
-                debugMessage = `start download: ${JSON.stringify(response)}`;
-                break;
-
-            case DOWNLOAD_STATE_ERROR:
-                downloadTask.error = response.error;
-                debugMessage = `error download: ${JSON.stringify(downloadTask) }`;
-                break;
-
-            default:
-                downloadTask.state = DOWNLOAD_STATE_ERROR;
-                downloadTask.error = "something went terrible wrong !";
+            this.removeDownload(task.pid);
         }
 
-        if ( debugMessage.length ) {
-            this.logService.log(Logger.LOG_DEBUG, debugMessage);
-        }
-
-        /**
-         * send update message
-         */
-        this.send(DOWNLOAD_STATE_UPDATE, downloadTask);
+        this.send(DOWNLOAD_STATE_UPDATE, task);
     }
 
     /**
@@ -212,32 +182,19 @@ export class DownloadProvider implements Observable {
      * @param download
      */
     private send(action: string, download: IDownloadTask) {
-        this.observers.forEach( (observer: Observer) => {
+        this.observers.forEach((observer: Observer) => {
             observer.notify(action, Object.assign({}, download));
         });
     }
 
-    private stopDownloadProcess( task: IDownloadTask ) {
+    private removeDownload(id) {
 
-        if (
-            task.state === DOWNLOAD_STATE_START       ||
-            task.state === DOWNLOAD_STATE_INITIALIZED ||
-            task.state === DOWNLOAD_STATE_PROGRESS
-        ) {
-            this.processes.get(task.pid).kill("SIGINT");
-        } else {
-            this.removeDownload(task);
-        }
-    }
-
-    private removeDownload(task: IDownloadTask) {
-
-        if ( this.downloadTasks.has(task.pid) ) {
-            this.downloadTasks.delete(task.pid);
+        if (this.downloadTasks.has(id)) {
+            this.downloadTasks.delete(id);
         }
 
-        if ( this.processes.has(task.pid) ) {
-            this.processes.delete(task.pid);
+        if (this.processes.has(id)) {
+            this.processes.delete(id);
         }
     }
 
@@ -251,10 +208,37 @@ export class DownloadProvider implements Observable {
      */
     private runTask(download: IDownloadTask, done) {
 
-        const taskParameter = this.createTaskParameters(download.param);
+        const taskParams = this.createTaskParameters(download.param);
+        const childProcess = this.createChildProcess(download.task, taskParams);
+
+        this.processes.set(download.pid, childProcess);
+
+        download.state = DOWNLOAD_STATE_START;
+
+        childProcess.on("message", (response: IDownloadMessage) => {
+
+            const task: IDownloadTask = this.downloadTasks.get(response.processId);
+            task.state  = response.state || DOWNLOAD_STATE_ERROR;
+            task.loaded = response.data.loaded || 0;
+            task.size   = response.data.total || 0;
+            task.error  = response.error;
+
+            this.updateDownload(task);
+        });
+
+        childProcess.on("exit", (...args) => {
+            done();
+        });
+
+        // start download
+        childProcess.send(download.pid);
+        this.updateDownload(download);
+    }
+
+    private createChildProcess(task, param): ChildProcess {
         const childProcess: ChildProcess = fork(
-            download.task,
-            taskParameter,
+            task,
+            param,
             {
                 stdio: [
                     "pipe",
@@ -264,39 +248,7 @@ export class DownloadProvider implements Observable {
                 ]
             }
         );
-
-        this.processes.set(download.pid, childProcess);
-
-        childProcess.on("message", this.handleDownloadResponse.bind(this));
-
-        childProcess.on("error", (message: IDownloadMessage) => {
-            this.logService.log(
-                Logger.LOG_DEBUG,
-                `task error: ${message}`
-            );
-        });
-
-        childProcess.on("exit", (...args) => {
-            this.logService.log(
-                Logger.LOG_DEBUG,
-                `download exit: ${args}`
-            );
-            this.removeDownload(download);
-            done();
-        });
-
-        if ( download.state === DOWNLOAD_STATE_QUEUED ) {
-            this.logService.log(
-                Logger.LOG_DEBUG,
-                `download start: ${JSON.stringify(download)}`
-            );
-
-            download.state = DOWNLOAD_STATE_START;
-            this.send(DOWNLOAD_STATE_UPDATE, download);
-        }
-
-        // send message to task
-        childProcess.send(download.pid);
+        return childProcess;
     }
 
     /**
@@ -304,7 +256,7 @@ export class DownloadProvider implements Observable {
      *
      * @param params
      */
-    private createTaskParameters(params: {[key: string]: any}): any[] {
+    private createTaskParameters(params: { [key: string]: any }): any[] {
         let flattenParams = [];
         for (const key in params) {
             if (params.hasOwnProperty(key)) {

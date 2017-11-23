@@ -128,7 +128,6 @@ class DownloadTask {
      * @param {number} loaded downloaded total
      * @param {number} size total size
      */
-    @debounce({delay: 500})
     private onProgress(chunk: number, loaded: number, total: number) {
         process.send({
             data: {
