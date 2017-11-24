@@ -11,8 +11,10 @@ import {
     DOWNLOAD_STATE_START,
     IDownload,
     IDownloadObservable,
-    IDownloadObserver
+    IDownloadObserver,
 } from "../api/download";
+
+import { IFile } from "../api/FileInterface";
 
 interface IDownloadMessage {
     state: string,
@@ -63,9 +65,9 @@ export class DownloadProvider implements IDownloadObservable {
 
     /**
      *
-     * @param {Observer} observer
+     * @param {IDownloadObserver} observer
      */
-    public subscribe(observer: Observer) {
+    public subscribe(observer: IDownloadObserver) {
         if (this.observers.indexOf(observer) === -1) {
             this.observers.push(observer);
         }
@@ -73,9 +75,9 @@ export class DownloadProvider implements IDownloadObservable {
 
     /**
      *
-     * @param {Observer} observer
+     * @param {IDownloadObserver} observer
      */
-    public unsubscribe(observer: Observer) {
+    public unsubscribe(observer: IDownloadObserver) {
         const index = this.observers.indexOf(observer)
         if (index !== -1) {
             this.observers.splice(index, 1);
@@ -89,16 +91,17 @@ export class DownloadProvider implements IDownloadObservable {
      * @param {string} task
      * @memberof DownloadProvider
      */
-    public initDownload(task: string, param: { [key: string]: any } = {}, group?: string) {
+    public initDownload(task: string, uri: string, raw: IFile, group?: string) {
 
         const download: IDownload = {
             group,
             loaded: 0,
-            param,
             pid: Math.random().toString(32).substr(2),
+            raw,
             size: 0,
             state: DOWNLOAD_STATE_QUEUED,
             task,
+            uri
         };
 
         this.downloadTasks.set(download.pid, download);
@@ -171,13 +174,13 @@ export class DownloadProvider implements IDownloadObservable {
      * @param {IDownloadMessage} data
      * @memberof DownloadProvider
      */
-     private updateDownload(task: IDownload): void {
+    private updateDownload(task: IDownload): void {
 
         if (task.state === DOWNLOAD_STATE_CANCEL ||
             task.state === DOWNLOAD_STATE_ERROR ||
             task.state === DOWNLOAD_STATE_END) {
 
-            if ( this.processes.has(task.pid) ) {
+            if (this.processes.has(task.pid)) {
                 this.processes.get(task.pid).kill("SIGINT");
             }
 
@@ -208,8 +211,12 @@ export class DownloadProvider implements IDownloadObservable {
      */
     private runTask(download: IDownload, done) {
 
-        const taskParams = this.createTaskParameters(download.param);
-        const childProcess = this.createChildProcess(download.task, taskParams);
+        const params = [
+            "--dir" , download.raw.path,
+            "--name", download.raw.name,
+            "--uri" , download.uri
+        ];
+        const childProcess = this.createChildProcess(download.task, params);
 
         this.processes.set(download.pid, childProcess);
 
@@ -218,14 +225,14 @@ export class DownloadProvider implements IDownloadObservable {
         childProcess.on("message", (response: IDownloadMessage) => {
 
             const task: IDownload = this.downloadTasks.get(response.processId);
-            task.state  = response.state || DOWNLOAD_STATE_ERROR;
+            task.state = response.state || DOWNLOAD_STATE_ERROR;
 
-            if ( response.state !== DOWNLOAD_STATE_ERROR ) {
+            if (response.state !== DOWNLOAD_STATE_ERROR) {
                 task.loaded = response.data.loaded || 0;
-                task.size   = response.data.total || 0;
+                task.size = response.data.total || 0;
             }
 
-            task.error  = response.error;
+            task.error = response.error;
             this.updateDownload(task);
         });
 
@@ -252,23 +259,5 @@ export class DownloadProvider implements IDownloadObservable {
             }
         );
         return childProcess;
-    }
-
-    /**
-     * convert params from object to array
-     *
-     * @param params
-     */
-    private createTaskParameters(params: { [key: string]: any }): any[] {
-        let flattenParams = [];
-        for (const key in params) {
-            if (params.hasOwnProperty(key)) {
-                flattenParams = flattenParams.concat([
-                    `--${key}`,
-                    params[key]
-                ]);
-            }
-        }
-        return flattenParams;
     }
 }

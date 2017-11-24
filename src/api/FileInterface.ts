@@ -9,4 +9,6 @@ export interface IFile {
     image?: string;
 
     title?: string;
+
+    type: string;
 }

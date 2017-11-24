@@ -1,5 +1,5 @@
+import { IFile } from "../../../../api/FileInterface";
 import { Database } from "../../../../provider/Database";
-import { IFile } from "../../api/FileInterface";
 
 export class VideoRepository {
 
@@ -36,18 +36,19 @@ export class VideoRepository {
     {
         const query = `
             INSERT INTO ${this.table}
-            (title, description,image, filename, path)
-            VALUES(:title,:desc,:img,:file,:path)
+            (title, description,image, filename, path, type)
+            VALUES(:title,:desc,:img,:file,:path,:type)
         `;
 
         const rows = await this.dbProvider.query(
             query,
             {
-                desc: file.description,
-                file: file.name,
-                img: file.image,
-                path: file.path,
-                title: file.title
+                desc : file.description,
+                file : file.name,
+                img  : file.image,
+                path : file.path,
+                title: file.title,
+                type : file.type
             }
         )
 

@@ -1,3 +1,5 @@
+import { IFile } from "../FileInterface";
+
 export interface IDownload {
 
     /**
@@ -15,6 +17,14 @@ export interface IDownload {
      * @memberof IDownload
      */
     group?: string;
+
+    /**
+     *
+     *
+     * @type {string}
+     * @memberof IDownload
+     */
+    uri: string;
 
     /**
      * current download state
@@ -35,10 +45,10 @@ export interface IDownload {
     /**
      * params send to task
      *
-     * @type {{[key: string]: any}}
+     * @type {IParam}
      * @memberof IDownload
      */
-    param: {[key: string]: any};
+    raw: IFile
 
     /**
      * child process id

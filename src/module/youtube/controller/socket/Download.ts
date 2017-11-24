@@ -1,7 +1,10 @@
 import * as Path from "path";
+
 import { IDownload, IDownloadObserver } from "../../../../api/download";
 import { IChannel, ISocketController } from "../../../../api/socket/";
 import { DownloadProvider } from "../../../../provider/DownloadProvider";
+
+import { IYoutubeFile } from "../../api/YoutubeFile";
 
 export class DownloadController implements IDownloadObserver, ISocketController {
 
@@ -25,13 +28,13 @@ export class DownloadController implements IDownloadObserver, ISocketController 
      * @param task
      */
     public execute(socketRequest: any): void {
-        const data = socketRequest.data;
+        const param = socketRequest.param;
         switch (socketRequest.action) {
             case "download":
-                this.createDownload(data);
+                this.createDownload(param);
                 break;
             case "cancel":
-                this.downloadProvider.cancelDownload(data);
+                this.downloadProvider.cancelDownload(param);
                 break;
             default:
         }
@@ -65,16 +68,24 @@ export class DownloadController implements IDownloadObserver, ISocketController 
             this.downloadProvider.getDownloads(DownloadController.SOCKET_CHANNEL_NAME));
     }
 
-    private createDownload(data) {
-        const dir = "/media/youtube_videos";
-        const uri = `https://www.youtube.com/watch?v=${data.id}`;
+    private createDownload(data: IYoutubeFile) {
+        const path = "/media/youtube_videos";
+        const uri  = `https://www.youtube.com/watch?v=${data.id}`;
 
         let name = `${data.name.replace(/\s/g, "_")}`;
         name = name.replace(/[^\w\d]/g, "");
         name = name + ".mp4";
 
-        const param = { dir, name, uri };
+        const raw: IYoutubeFile = {
+            description: data.description,
+            id: data.id,
+            image: data.image,
+            name,
+            path,
+            title: data.title,
+            type: "video"
+        };
 
-        this.downloadProvider.initDownload(this.taskFile, param, DownloadController.SOCKET_CHANNEL_NAME );
+        this.downloadProvider.initDownload(this.taskFile, uri, raw, DownloadController.SOCKET_CHANNEL_NAME );
     }
 }
