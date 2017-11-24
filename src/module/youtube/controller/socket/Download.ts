@@ -34,7 +34,8 @@ export class DownloadController implements IDownloadObserver, ISocketController 
                 this.createDownload(param);
                 break;
             case "cancel":
-                this.downloadProvider.cancelDownload(param);
+                this.downloadProvider
+                    .cancelDownload(param);
                 break;
             default:
         }
@@ -72,17 +73,17 @@ export class DownloadController implements IDownloadObserver, ISocketController 
         const path = "/media/youtube_videos";
         const uri  = `https://www.youtube.com/watch?v=${data.id}`;
 
-        let name = `${data.name.replace(/\s/g, "_")}`;
-        name = name.replace(/[^\w\d]/g, "");
-        name = name + ".mp4";
+        let fileName = `${data.name.replace(/\s/g, "_")}`;
+        fileName = fileName.replace(/[^\w\d]/g, "");
+        fileName = fileName + ".mp4";
 
         const raw: IYoutubeFile = {
             description: data.description,
+            fileName,
             id: data.id,
             image: data.image,
-            name,
+            name: data.name,
             path,
-            title: data.title,
             type: "video"
         };
 

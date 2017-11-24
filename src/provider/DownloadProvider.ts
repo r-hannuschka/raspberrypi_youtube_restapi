@@ -131,7 +131,7 @@ export class DownloadProvider implements IDownloadObservable {
 
         if (task.state === DOWNLOAD_STATE_QUEUED) {
             this.downloadQueue.remove((download) => {
-                if (download.data.pid !== id) {
+                if (download.pid !== id) {
                     return false;
                 }
                 return true;

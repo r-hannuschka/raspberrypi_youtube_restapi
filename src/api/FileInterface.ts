@@ -1,5 +1,7 @@
 export interface IFile {
 
+    fileName: string;
+
     name: string;
 
     path: string;
@@ -7,8 +9,6 @@ export interface IFile {
     description?: string;
 
     image?: string;
-
-    title?: string;
 
     type: string;
 }
