@@ -62,7 +62,7 @@ export class Database {
             const logMessage = `
                 db connection error:
                 ${__filename}
-                username: ${Config.maria_db.user},
+                username: ${Config.maria_db.username},
                 password: ${Config.maria_db.password},
                 host    : ${Config.maria_db.host},
                 database: ${Config.maria_db.database}`;

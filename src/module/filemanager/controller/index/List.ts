@@ -1,26 +1,18 @@
 import { Request, Response } from "express";
 import { ControllerInterface } from "../../../../api/ControllerInterface";
-import { Database } from "../../../../provider/Database";
+import { VideoRepository } from "../../model/repository/VideoRepository";
 
 export class List implements ControllerInterface
 {
-    private dbProvider: Database;
+    private repository: VideoRepository;
 
     constructor() {
-        this.dbProvider = Database.getInstance();
+        this.repository = VideoRepository.getInstance();
     }
 
     public async execute(req: Request, res: Response)
     {
-        /** move to repository */
-        const rows: any[] = await this.dbProvider.query(
-            "SELECT * FROM videos LIMIT :start,:limit",
-            {
-                limit: 20,
-                start: 0
-            }
-        );
-
+        const rows = await this.repository.list();
         res.status(200);
         res.json({
             data: rows,

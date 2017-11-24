@@ -1,10 +1,11 @@
 import { Request, Response, Router } from "express";
 import { ControllerInterface } from "../api";
+import { Observable } from "../api/Observable";
+import { Observer } from "../api/Observer";
 import { ISocketController } from "../api/socket/SocketControllerInterface";
 import { SocketManager } from "../model/socket/SocketManager";
 
-export abstract class AbstractModule
-{
+export abstract class AbstractModule {
     /**
      * @private
      * @type {Router}
@@ -18,7 +19,9 @@ export abstract class AbstractModule
      * @type {Map<string, ControllerInterface>}
      * @memberof AbstractModule
      */
-    private controllerMap: Map<string, ControllerInterface> = new Map();
+    private controllerMap: Map<string, ControllerInterface>;
+
+    private observerMap: WeakMap<Observable, Observer>;
 
     /**
      * Creates an instance of AbstractModule.
@@ -28,6 +31,8 @@ export abstract class AbstractModule
      */
     constructor(router: Router) {
         this.router = router;
+        this.controllerMap = new Map();
+        this.observerMap = new WeakMap();
         this.bootstrap();
     }
 
@@ -47,11 +52,15 @@ export abstract class AbstractModule
         return this.router;
     }
 
-    protected registerController(route: string, controller: ControllerInterface)
-    {
-        if ( ! this.controllerMap.has(route) ) {
+    protected registerController(route: string, controller: ControllerInterface) {
+        if (!this.controllerMap.has(route)) {
             this.controllerMap.set(route, controller);
         }
+    }
+
+    protected registerObserver(observeAble: Observable, observer: Observer) {
+        this.observerMap.set(observeAble, observer);
+        observeAble.subscribe(observer);
     }
 
     /**
@@ -60,11 +69,10 @@ export abstract class AbstractModule
      * @param {String} channel
      * @param {ISocketController} controller
      */
-    protected registerSocketController(channel: string, controller: ISocketController)
-    {
+    protected registerSocketController(channel: string, controller: ISocketController) {
         const socketManager = SocketManager.getInstance();
         const socketChannel = socketManager.createChannel(channel);
-        socketChannel.setEndpoint( controller );
+        socketChannel.setEndpoint(controller);
         controller.setChannel(socketChannel);
     }
 
@@ -73,8 +81,7 @@ export abstract class AbstractModule
      * @private
      * @memberof AbstractModule
      */
-    protected bootstrap()
-    {
+    protected bootstrap() {
         this.configureRouter();
     }
 
@@ -85,14 +92,14 @@ export abstract class AbstractModule
      * @param {Response} res
      * @memberof AbstractController
      */
-    protected processRequest( req: Request, res: Response ) {
+    protected processRequest(req: Request, res: Response) {
 
         const action: string = req.params.action;
         const controller: string = req.params.controller;
 
         const controllerAction = `${controller}/${action}`;
 
-        if ( ! this.controllerMap.has(controllerAction) ) {
+        if (!this.controllerMap.has(controllerAction)) {
             throw new Error("Controller not found");
         }
 
@@ -110,7 +117,7 @@ export abstract class AbstractModule
      */
     private configureRouter() {
         const baseRoute = `/api/${this.getName()}`;
-        this.router.use( `${baseRoute}/:controller/:action?`, (req: Request, res: Response) => {
+        this.router.use(`${baseRoute}/:controller/:action?`, (req: Request, res: Response) => {
             this.processRequest(req, res);
         });
     }

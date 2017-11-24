@@ -1,9 +1,9 @@
 import * as Path from "path";
-import { Observer } from "../../../../api/Observer";
+import { IDownload, IDownloadObserver } from "../../../../api/download";
 import { IChannel, ISocketController } from "../../../../api/socket/";
 import { DownloadProvider } from "../../../../provider/DownloadProvider";
 
-export class DownloadController implements Observer, ISocketController {
+export class DownloadController implements IDownloadObserver, ISocketController {
 
     public static readonly SOCKET_CHANNEL_NAME = "youtube.download";
 
@@ -50,8 +50,8 @@ export class DownloadController implements Observer, ISocketController {
      * @param {String} event
      * @param data
      */
-    public notify(event: string, data: any) {
-        this.socketChannel.emit(event, data);
+    public update(download: IDownload) {
+        this.socketChannel.emit(`download_provider.download${download.state}`, download);
     }
 
     /**

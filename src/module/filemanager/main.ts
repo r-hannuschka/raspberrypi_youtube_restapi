@@ -1,5 +1,7 @@
+import { DownloadProvider } from "../../provider/DownloadProvider";
 import { AbstractModule } from "../AbstractModule";
 import { List } from "./controller";
+import { DownloadObserver } from "./model/observer/DownloadObserver";
 
 export class FilemanagerModule extends AbstractModule
 {
@@ -28,6 +30,8 @@ export class FilemanagerModule extends AbstractModule
     protected bootstrap()
     {
         this.registerController("index/list", new List());
+        this.registerObserver( DownloadProvider.getInstance(), new DownloadObserver() );
+
         super.bootstrap();
     }
 }

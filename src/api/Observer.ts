@@ -7,5 +7,5 @@ export interface Observer {
      * @param {*} data
      * @memberof Observer
      */
-    notify(event: string, data: any);
+    update(data: any);
 }

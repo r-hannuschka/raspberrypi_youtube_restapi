@@ -1,6 +1,5 @@
 import * as async from "async";
 import { ChildProcess, fork } from "child_process";
-import { Observable } from "../api/Observable";
 import { Observer } from "../api/Observer";
 import { Logger } from "./Logger";
 
@@ -10,9 +9,10 @@ import {
     DOWNLOAD_STATE_ERROR,
     DOWNLOAD_STATE_QUEUED,
     DOWNLOAD_STATE_START,
-    DOWNLOAD_STATE_UPDATE,
-    IDownloadTask
-} from "../api/Download";
+    IDownload,
+    IDownloadObservable,
+    IDownloadObserver
+} from "../api/download";
 
 interface IDownloadMessage {
     state: string,
@@ -24,11 +24,11 @@ interface IDownloadMessage {
     processId: string
 };
 
-export class DownloadProvider implements Observable {
+export class DownloadProvider implements IDownloadObservable {
 
     private downloadQueue: any;
 
-    private downloadTasks: Map<string, IDownloadTask>;
+    private downloadTasks: Map<string, IDownload>;
 
     private processes: Map<string, ChildProcess>
 
@@ -91,7 +91,7 @@ export class DownloadProvider implements Observable {
      */
     public initDownload(task: string, param: { [key: string]: any } = {}, group?: string) {
 
-        const download: IDownloadTask = {
+        const download: IDownload = {
             group,
             loaded: 0,
             param,
@@ -121,7 +121,7 @@ export class DownloadProvider implements Observable {
      * @memberof DownloadProvider
      */
     public cancelDownload(id) {
-        const task: IDownloadTask = this.downloadTasks.get(id);
+        const task: IDownload = this.downloadTasks.get(id);
         if (!task) {
             return;
         }
@@ -143,14 +143,25 @@ export class DownloadProvider implements Observable {
      *
      * @param {String} groupname
      */
-    public getDownloads(groupName?: string): IDownloadTask[] {
-        let currentTasks: IDownloadTask[] = Array.from(this.downloadTasks.values());
+    public getDownloads(groupName?: string): IDownload[] {
+        let currentTasks: IDownload[] = Array.from(this.downloadTasks.values());
         if (groupName && groupName.replace(/^\s*(.*?)\s*$/, "$1").length) {
-            currentTasks = currentTasks.filter((task: IDownloadTask) => {
+            currentTasks = currentTasks.filter((task: IDownload) => {
                 return task.group === groupName;
             });
         }
         return currentTasks;
+    }
+
+    /**
+     *
+     * @param action
+     * @param download
+     */
+    public notify(download: IDownload) {
+        this.observers.forEach((observer: IDownloadObserver) => {
+            observer.update(Object.assign({}, download));
+        });
     }
 
     /**
@@ -160,7 +171,7 @@ export class DownloadProvider implements Observable {
      * @param {IDownloadMessage} data
      * @memberof DownloadProvider
      */
-     private updateDownload(task: IDownloadTask): void {
+     private updateDownload(task: IDownload): void {
 
         if (task.state === DOWNLOAD_STATE_CANCEL ||
             task.state === DOWNLOAD_STATE_ERROR ||
@@ -173,18 +184,7 @@ export class DownloadProvider implements Observable {
             this.removeDownload(task.pid);
         }
 
-        this.send(DOWNLOAD_STATE_UPDATE, task);
-    }
-
-    /**
-     *
-     * @param action
-     * @param download
-     */
-    private send(action: string, download: IDownloadTask) {
-        this.observers.forEach((observer: Observer) => {
-            observer.notify(action, Object.assign({}, download));
-        });
+        this.notify(task);
     }
 
     private removeDownload(id) {
@@ -206,7 +206,7 @@ export class DownloadProvider implements Observable {
      * @param {any} done
      * @memberof DownloadProvider
      */
-    private runTask(download: IDownloadTask, done) {
+    private runTask(download: IDownload, done) {
 
         const taskParams = this.createTaskParameters(download.param);
         const childProcess = this.createChildProcess(download.task, taskParams);
@@ -217,12 +217,15 @@ export class DownloadProvider implements Observable {
 
         childProcess.on("message", (response: IDownloadMessage) => {
 
-            const task: IDownloadTask = this.downloadTasks.get(response.processId);
+            const task: IDownload = this.downloadTasks.get(response.processId);
             task.state  = response.state || DOWNLOAD_STATE_ERROR;
-            task.loaded = response.data.loaded || 0;
-            task.size   = response.data.total || 0;
-            task.error  = response.error;
 
+            if ( response.state !== DOWNLOAD_STATE_ERROR ) {
+                task.loaded = response.data.loaded || 0;
+                task.size   = response.data.total || 0;
+            }
+
+            task.error  = response.error;
             this.updateDownload(task);
         });
 

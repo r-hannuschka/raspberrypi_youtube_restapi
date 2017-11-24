@@ -1,10 +1,10 @@
-export interface IDownloadTask {
+export interface IDownload {
 
     /**
      *
      *
      * @type {string}
-     * @memberof IDownloadTask
+     * @memberof IDownload
      */
     error?: string;
 
@@ -12,7 +12,7 @@ export interface IDownloadTask {
      * group downloads by name to filter them
      *
      * @type {string}
-     * @memberof IDownloadTask
+     * @memberof IDownload
      */
     group?: string;
 
@@ -20,7 +20,7 @@ export interface IDownloadTask {
      * current download state
      *
      * @type {string}
-     * @memberof IDownloadTask
+     * @memberof IDownload
      */
     state: string;
 
@@ -28,7 +28,7 @@ export interface IDownloadTask {
      * bytes allready loaded
      *
      * @type {number}
-     * @memberof IDownloadTask
+     * @memberof IDownload
      */
     loaded: number;
 
@@ -36,7 +36,7 @@ export interface IDownloadTask {
      * params send to task
      *
      * @type {{[key: string]: any}}
-     * @memberof IDownloadTask
+     * @memberof IDownload
      */
     param: {[key: string]: any};
 
@@ -44,7 +44,7 @@ export interface IDownloadTask {
      * child process id
      *
      * @type {string}
-     * @memberof IDownloadTask
+     * @memberof IDownload
      */
     pid: string;
 
@@ -52,7 +52,7 @@ export interface IDownloadTask {
      * full size of download
      *
      * @type {number}
-     * @memberof IDownloadTask
+     * @memberof IDownload
      */
     size: number;
 
@@ -60,16 +60,7 @@ export interface IDownloadTask {
      * path to task
      *
      * @type {string}
-     * @memberof IDownloadTask
+     * @memberof IDownload
      */
     task: string;
-};
-
-export const DOWNLOAD_STATE_CANCEL      = "cancel";
-export const DOWNLOAD_STATE_END         = "end";
-export const DOWNLOAD_STATE_ERROR       = "error";
-export const DOWNLOAD_STATE_INITIALIZED = "initialized";
-export const DOWNLOAD_STATE_PROGRESS    = "progress";
-export const DOWNLOAD_STATE_QUEUED      = "queued";
-export const DOWNLOAD_STATE_START       = "start";
-export const DOWNLOAD_STATE_UPDATE      = "update";
+}
