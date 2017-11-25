@@ -3,7 +3,7 @@ import { AbstractModule } from "../AbstractModule";
 import { List } from "./controller";
 import { DownloadObserver } from "./model/observer/DownloadObserver";
 
-export class FilemanagerModule extends AbstractModule
+export class VideoModule extends AbstractModule
 {
     /**
      * @static
@@ -19,7 +19,7 @@ export class FilemanagerModule extends AbstractModule
      * @memberof FilemanagerModule
      */
     public getName(): string {
-        return FilemanagerModule.MODULE_NAME;
+        return VideoModule.MODULE_NAME;
     }
 
     /**

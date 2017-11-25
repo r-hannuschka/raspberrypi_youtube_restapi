@@ -1,5 +1,5 @@
 import { DOWNLOAD_STATE_END, IDownload, IDownloadObserver } from "../../../../api/download";
-import { IFile } from "../../../../api/FileInterface";
+import { IVideoFile } from "../../api/VideoFile";
 import { VideoRepository } from "../../model/repository/VideoRepository";
 
 export class DownloadObserver implements IDownloadObserver
@@ -14,10 +14,10 @@ export class DownloadObserver implements IDownloadObserver
 
         if ( download.state === DOWNLOAD_STATE_END ) {
             // save data to database
-            let file: IFile;
+            let file: IVideoFile;
             file = {
                 description: download.raw.description,
-                fileName: download.raw.fileName,
+                filename: download.raw.fileName,
                 image: download.raw.image,
                 name: download.raw.name,
                 path: download.raw.path,

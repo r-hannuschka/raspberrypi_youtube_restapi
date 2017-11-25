@@ -97,7 +97,7 @@ export abstract class AbstractModule {
         const action: string = req.params.action;
         const controller: string = req.params.controller;
 
-        const controllerAction = `${controller}/${action}`;
+        const controllerAction = controller ? `${controller}/${action}` : `index/${action}`;
 
         if (!this.controllerMap.has(controllerAction)) {
             throw new Error("Controller not found");
@@ -117,6 +117,12 @@ export abstract class AbstractModule {
      */
     private configureRouter() {
         const baseRoute = `/api/${this.getName()}`;
+
+        // index controller
+        this.router.use(`${baseRoute}/:action`, (req: Request, res: Response) => {
+            this.processRequest(req, res);
+        });
+
         this.router.use(`${baseRoute}/:controller/:action?`, (req: Request, res: Response) => {
             this.processRequest(req, res);
         });

@@ -36,6 +36,7 @@ export class Database {
      * @memberof Database
      */
     public query(query: string, args: any = {}): Promise<any[]> {
+
         const dbQuery: Promise<any[]> = new Promise( (resolve, reject) => {
             this.connection.query(query, args, (err, rows: any[]) => {
                 if ( err ) {
