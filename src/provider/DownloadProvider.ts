@@ -52,7 +52,7 @@ export class DownloadProvider implements IDownloadObservable {
             (data, done) => {
                 this.runTask(data, done);
             },
-            2 // max downloads at once
+            1 // max downloads at once
         );
 
         this.processes = new Map();
@@ -113,7 +113,6 @@ export class DownloadProvider implements IDownloadObservable {
 
         download.state = DOWNLOAD_STATE_QUEUED;
         this.updateDownload(download);
-
         this.downloadQueue.push(download);
     }
 
@@ -124,14 +123,15 @@ export class DownloadProvider implements IDownloadObservable {
      * @memberof DownloadProvider
      */
     public cancelDownload(id) {
+
         const task: IDownload = this.downloadTasks.get(id);
         if (!task) {
             return;
         }
 
         if (task.state === DOWNLOAD_STATE_QUEUED) {
-            this.downloadQueue.remove((download) => {
-                if (download.pid !== id) {
+            this.downloadQueue.remove((item: any) => {
+                if (item.data.pid !== id) {
                     return false;
                 }
                 return true;
@@ -183,7 +183,6 @@ export class DownloadProvider implements IDownloadObservable {
             if (this.processes.has(task.pid)) {
                 this.processes.get(task.pid).kill("SIGINT");
             }
-
             this.removeDownload(task.pid);
         }
 
@@ -213,7 +212,7 @@ export class DownloadProvider implements IDownloadObservable {
 
         const params = [
             "--dir" , download.raw.path,
-            "--name", download.raw.name,
+            "--name", download.raw.fileName,
             "--uri" , download.uri
         ];
         const childProcess = this.createChildProcess(download.task, params);

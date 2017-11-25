@@ -17,6 +17,7 @@ export class DownloadObserver implements IDownloadObserver
             let file: IFile;
             file = {
                 description: download.raw.description,
+                fileName: download.raw.fileName,
                 image: download.raw.image,
                 name: download.raw.name,
                 path: download.raw.path,

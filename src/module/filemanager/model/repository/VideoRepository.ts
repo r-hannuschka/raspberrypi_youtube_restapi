@@ -44,10 +44,10 @@ export class VideoRepository {
             query,
             {
                 desc : file.description,
-                file : file.name,
+                file : file.fileName,
                 img  : file.image,
                 path : file.path,
-                title: file.title,
+                title: file.name,
                 type : file.type
             }
         )
