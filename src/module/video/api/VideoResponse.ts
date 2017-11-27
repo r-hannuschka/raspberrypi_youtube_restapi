@@ -1,4 +1,4 @@
-import { IVideoFile } from "./VideoFile";
+import { IVideoFile } from "./../../../api/VideoFile";
 
 export interface IVideoResult {
 

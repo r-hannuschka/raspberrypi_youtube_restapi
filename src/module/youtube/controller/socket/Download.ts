@@ -1,25 +1,28 @@
-import * as Path from "path";
+import {
+    DOWNLOAD_STATE_END,
+    EVENT_VIDEO_DOWNLOAD_FINISHED,
+    IDownload,
+    IDownloadObserver
+} from "../../../../api/download";
 
-import { IDownload, IDownloadObserver } from "../../../../api/download";
 import { IChannel, ISocketController } from "../../../../api/socket/";
+import { IVideoFile } from "../../../../api/VideoFile";
 import { DownloadProvider } from "../../../../provider/DownloadProvider";
-
-import { IYoutubeFile } from "../../api/YoutubeFile";
+import { PubSub } from "../../../../provider/PubSub";
+import { DownloadHelper } from "../../helper/DownloadHelper";
 
 export class DownloadController implements IDownloadObserver, ISocketController {
-
-    public static readonly SOCKET_CHANNEL_NAME = "youtube.download";
 
     private socketChannel: IChannel;
 
     private downloadProvider: DownloadProvider;
 
-    private taskFile: string;
+    private downloadHelper: DownloadHelper;
 
     public constructor() {
         this.downloadProvider = DownloadProvider.getInstance();
-        this.downloadProvider.subscribe(this);
-        this.taskFile = Path.resolve(__dirname, "../../tasks/download");
+        this.downloadProvider.subscribe(this, DownloadHelper.GROUP_NAME);
+        this.downloadHelper = DownloadHelper.getInstance();
     }
 
     /**
@@ -31,7 +34,8 @@ export class DownloadController implements IDownloadObserver, ISocketController 
         const param = socketRequest.param;
         switch (socketRequest.action) {
             case "download":
-                this.createDownload(param);
+                this.downloadHelper
+                    .download(param);
                 break;
             case "cancel":
                 this.downloadProvider
@@ -55,6 +59,11 @@ export class DownloadController implements IDownloadObserver, ISocketController 
      * @param data
      */
     public update(download: IDownload) {
+
+        if ( download.state === DOWNLOAD_STATE_END ) {
+            PubSub.publish(EVENT_VIDEO_DOWNLOAD_FINISHED, download.raw as IVideoFile);
+        }
+
         this.socketChannel.emit(`download_provider.download${download.state}`, download);
     }
 
@@ -66,27 +75,6 @@ export class DownloadController implements IDownloadObserver, ISocketController 
      */
     public onConnected() {
         return Array.from(
-            this.downloadProvider.getDownloads(DownloadController.SOCKET_CHANNEL_NAME));
-    }
-
-    private createDownload(data: IYoutubeFile) {
-        const path = "/media/youtube_videos";
-        const uri  = `https://www.youtube.com/watch?v=${data.id}`;
-
-        let fileName = `${data.name.replace(/\s/g, "_")}`;
-        fileName = fileName.replace(/[^\w\d]/g, "");
-        fileName = fileName + ".mp4";
-
-        const raw: IYoutubeFile = {
-            description: data.description,
-            fileName,
-            id: data.id,
-            image: data.image,
-            name: data.name,
-            path,
-            type: "video"
-        };
-
-        this.downloadProvider.initDownload(this.taskFile, uri, raw, DownloadController.SOCKET_CHANNEL_NAME );
+            this.downloadProvider.getDownloads(DownloadHelper.GROUP_NAME));
     }
 }

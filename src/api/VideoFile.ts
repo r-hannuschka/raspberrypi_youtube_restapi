@@ -1,4 +1,6 @@
-export interface IVideoFile {
+import { IFile } from "./FileInterface";
+
+export interface IVideoFile extends IFile {
 
     video_id?: number;
 
@@ -7,10 +9,4 @@ export interface IVideoFile {
     description: string;
 
     image: string;
-
-    filename: string;
-
-    path: string;
-
-    type: string;
 }

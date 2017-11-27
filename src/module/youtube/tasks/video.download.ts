@@ -1,7 +1,6 @@
 import * as fs from "fs";
 import { IncomingHttpHeaders, IncomingMessage } from "http";
 import * as ytdl from "ytdl-core";
-import { debounce } from "../../../util/debounce.decorator";
 
 class DownloadTask {
 

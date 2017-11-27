@@ -75,12 +75,13 @@ export class Logger {
     }
 
     /**
+     * log an message
      *
-     * @param {string} type
-     * @param {*} body
+     * @param {string} type log type
+     * @param {*} body log message
+     * @param {string} [path=null] path to write log file
      * @returns {Promise<void>}
      * @memberof Logger
-     * @throws Error
      */
     public log(type: string, body: any, path: string = null): Promise<void> {
 

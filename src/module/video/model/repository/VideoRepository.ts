@@ -1,5 +1,5 @@
+import { IVideoFile } from "../../../../api/VideoFile";
 import { Database } from "../../../../provider/Database";
-import { IVideoFile } from "../../api/VideoFile";
 import { IVideoResult } from "../../api/VideoResponse";
 
 export class VideoRepository {
@@ -63,7 +63,7 @@ export class VideoRepository {
         const query = `
             INSERT INTO ${this.table}
             (name, description,image, filename, path, type)
-            VALUES(:name,:description,:image,:file,:path,:type)
+            VALUES(:name,:description,:image,:fileName,:path,:type)
         `;
 
         const rows = await this.dbProvider.query( query, file)

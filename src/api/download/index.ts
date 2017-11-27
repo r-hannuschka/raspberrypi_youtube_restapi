@@ -10,3 +10,5 @@ export const DOWNLOAD_STATE_PROGRESS    = "progress";
 export const DOWNLOAD_STATE_QUEUED      = "queued";
 export const DOWNLOAD_STATE_START       = "start";
 export const DOWNLOAD_STATE_UPDATE      = "update";
+export const EVENT_DOWNLOAD_FINISHED = "download:end"
+export const EVENT_VIDEO_DOWNLOAD_FINISHED = "download-video:end"

@@ -1,6 +1,7 @@
 import { AbstractModule } from "../AbstractModule";
 import { List, Search } from "./controller";
 import { DownloadController } from "./controller/socket/Download";
+import { DownloadHelper } from "./helper/DownloadHelper";
 
 export class YoutubeModule extends AbstractModule
 {
@@ -30,7 +31,7 @@ export class YoutubeModule extends AbstractModule
     {
         this.registerController("index/list",   new List());
         this.registerController("index/search", new Search());
-        this.registerSocketController( DownloadController.SOCKET_CHANNEL_NAME, new DownloadController());
+        this.registerSocketController( DownloadHelper.GROUP_NAME, new DownloadController());
 
         super.bootstrap();
     }

@@ -1,9 +1,8 @@
 import { Request, Response, Router } from "express";
 import { ControllerInterface } from "../api";
-import { Observable } from "../api/Observable";
-import { Observer } from "../api/Observer";
 import { ISocketController } from "../api/socket/SocketControllerInterface";
 import { SocketManager } from "../model/socket/SocketManager";
+import { PubSub } from "../provider/PubSub";
 
 export abstract class AbstractModule {
     /**
@@ -58,9 +57,16 @@ export abstract class AbstractModule {
         }
     }
 
-    protected registerObserver(observeAble: Observable, observer: Observer) {
-        this.observerMap.set(observeAble, observer);
-        observeAble.subscribe(observer);
+    /**
+     * register to publish subscribe to get notified on events
+     *
+     * @protected
+     * @param {string} event 
+     * @param {any} handler 
+     * @memberof AbstractModule
+     */
+    protected registerEvent(event: string, handler) {
+        PubSub.subscribe(event, handler);
     }
 
     /**

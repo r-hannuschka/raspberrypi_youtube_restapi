@@ -36,7 +36,7 @@ export class DownloadProvider implements IDownloadObservable {
 
     private logService: Logger;
 
-    private observers: Observer[] = [];
+    private observers: Map<string, Observer[]>;
 
     private static readonly instance: DownloadProvider = new DownloadProvider();
 
@@ -52,10 +52,11 @@ export class DownloadProvider implements IDownloadObservable {
             (data, done) => {
                 this.runTask(data, done);
             },
-            1 // max downloads at once
+            2 // max downloads at once
         );
 
-        this.processes = new Map();
+        this.observers     = new Map();
+        this.processes     = new Map();
         this.downloadTasks = new Map();
     }
 
@@ -67,9 +68,12 @@ export class DownloadProvider implements IDownloadObservable {
      *
      * @param {IDownloadObserver} observer
      */
-    public subscribe(observer: IDownloadObserver) {
-        if (this.observers.indexOf(observer) === -1) {
-            this.observers.push(observer);
+    public subscribe(observer: IDownloadObserver, group = "global") {
+
+        if (this.observers.has(group)) {
+            this.observers.get(group).push(observer);
+        } else {
+            this.observers.set(group, [observer]);
         }
     }
 
@@ -77,21 +81,32 @@ export class DownloadProvider implements IDownloadObservable {
      *
      * @param {IDownloadObserver} observer
      */
-    public unsubscribe(observer: IDownloadObserver) {
-        const index = this.observers.indexOf(observer)
-        if (index !== -1) {
-            this.observers.splice(index, 1);
+    public unsubscribe(observer: IDownloadObserver, group = "global") {
+
+        if ( this.observers.has(group) ) {
+            const observers = this.observers.get(group);
+            const index     = observers.indexOf(observer);
+
+            observers.splice(index, 1);
+
+            if ( ! observers.length ) {
+                this.observers.delete(group);
+            }
         }
     }
 
     /**
      *
      *
-     * @param {any} data
      * @param {string} task
+     * @param {string} uri
+     * @param {IFile} raw
+     * @param {string} [group]
+     * @param {boolean} [autostart=true]
+     * @returns {IDownload}
      * @memberof DownloadProvider
      */
-    public initDownload(task: string, uri: string, raw: IFile, group?: string) {
+    public initDownload(task: string, uri: string, raw: IFile, group?: string, autostart = true): IDownload {
 
         const download: IDownload = {
             group,
@@ -111,6 +126,20 @@ export class DownloadProvider implements IDownloadObservable {
             `initialize download: ${JSON.stringify(download)}`
         );
 
+        if ( autostart ) {
+            this.startDownload(download);
+        }
+
+        return download;
+    }
+
+    /**
+     * starts a download and loads them into a queue
+     *
+     * @param {IDownload} download
+     * @memberof DownloadProvider
+     */
+    public startDownload(download: IDownload) {
         download.state = DOWNLOAD_STATE_QUEUED;
         this.updateDownload(download);
         this.downloadQueue.push(download);
@@ -162,7 +191,12 @@ export class DownloadProvider implements IDownloadObservable {
      * @param download
      */
     public notify(download: IDownload) {
-        this.observers.forEach((observer: IDownloadObserver) => {
+
+        let observers = this.observers.get("global") || [];
+        observers = observers.concat(
+            this.observers.get(download.group) || []);
+
+        observers.forEach((observer: IDownloadObserver) => {
             observer.update(Object.assign({}, download));
         });
     }
@@ -175,7 +209,6 @@ export class DownloadProvider implements IDownloadObservable {
      * @memberof DownloadProvider
      */
     private updateDownload(task: IDownload): void {
-
         if (task.state === DOWNLOAD_STATE_CANCEL ||
             task.state === DOWNLOAD_STATE_ERROR ||
             task.state === DOWNLOAD_STATE_END) {
@@ -185,7 +218,6 @@ export class DownloadProvider implements IDownloadObservable {
             }
             this.removeDownload(task.pid);
         }
-
         this.notify(task);
     }
 
@@ -232,6 +264,7 @@ export class DownloadProvider implements IDownloadObservable {
             }
 
             task.error = response.error;
+
             this.updateDownload(task);
         });
 
@@ -254,7 +287,7 @@ export class DownloadProvider implements IDownloadObservable {
                     "pipe",
                     "pipe",
                     "ipc"
-                ]
+                ],
             }
         );
         return childProcess;

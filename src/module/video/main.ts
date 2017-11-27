@@ -1,7 +1,7 @@
-import { DownloadProvider } from "../../provider/DownloadProvider";
+import { EVENT_VIDEO_DOWNLOAD_FINISHED } from "../../api/download";
 import { AbstractModule } from "../AbstractModule";
 import { List } from "./controller";
-import { DownloadObserver } from "./model/observer/DownloadObserver";
+import { Observer } from "./model/observer/DownloadObserver";
 
 export class VideoModule extends AbstractModule
 {
@@ -30,7 +30,9 @@ export class VideoModule extends AbstractModule
     protected bootstrap()
     {
         this.registerController("index/list", new List());
-        this.registerObserver( DownloadProvider.getInstance(), new DownloadObserver() );
+
+        const observer = new Observer();
+        this.registerEvent(EVENT_VIDEO_DOWNLOAD_FINISHED, observer.onVideoDownloadFinished.bind(observer));
 
         super.bootstrap();
     }
