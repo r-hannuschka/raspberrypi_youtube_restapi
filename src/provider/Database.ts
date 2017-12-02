@@ -72,4 +72,5 @@ export class Database {
                 .log(Logger.LOG_DEBUG, logMessage);
         }
     }
+
 }

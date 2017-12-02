@@ -253,28 +253,33 @@ export class DownloadProvider implements IDownloadObservable {
 
         download.state = DOWNLOAD_STATE_START;
 
-        childProcess.on("message", (response: IDownloadMessage) => {
-
-            const task: IDownload = this.downloadTasks.get(response.processId);
-            task.state = response.state || DOWNLOAD_STATE_ERROR;
-
-            if (response.state !== DOWNLOAD_STATE_ERROR) {
-                task.loaded = response.data.loaded || 0;
-                task.size = response.data.total || 0;
-            }
-
-            task.error = response.error;
-
-            this.updateDownload(task);
-        });
-
-        childProcess.on("exit", (...args) => {
+        childProcess.on("message",  this.onDownloadTaskMessage.bind(this) );
+        childProcess.once("exit", () => {
+            childProcess.removeAllListeners();
             done();
         });
-
-        // start download
         childProcess.send(download.pid);
+
         this.updateDownload(download);
+    }
+
+    /**
+     * handle messag from download task
+     *
+     * @param {IDownloadMessage} response
+     */
+    private onDownloadTaskMessage(response: IDownloadMessage) {
+        const task: IDownload = this.downloadTasks.get(response.processId);
+        task.state = response.state || DOWNLOAD_STATE_ERROR;
+
+        if (response.state !== DOWNLOAD_STATE_ERROR) {
+            task.loaded = response.data.loaded || 0;
+            task.size = response.data.total || 0;
+        }
+
+        task.error = response.error;
+
+        this.updateDownload(task);
     }
 
     private createChildProcess(task, param): ChildProcess {

@@ -32,7 +32,7 @@ export class VideoModule extends AbstractModule
         this.registerController("index/list", new List());
 
         const observer = new Observer();
-        this.registerEvent(EVENT_VIDEO_DOWNLOAD_FINISHED, observer.onVideoDownloadFinished.bind(observer));
+        this.registerEvent(EVENT_VIDEO_DOWNLOAD_FINISHED, observer);
 
         super.bootstrap();
     }

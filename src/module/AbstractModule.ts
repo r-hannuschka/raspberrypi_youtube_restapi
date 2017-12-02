@@ -66,7 +66,7 @@ export abstract class AbstractModule {
      * @memberof AbstractModule
      */
     protected registerEvent(event: string, handler) {
-        PubSub.subscribe(event, handler);
+        PubSub.subscribe(event, handler.execute.bind(handler));
     }
 
     /**

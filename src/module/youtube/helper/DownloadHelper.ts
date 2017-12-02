@@ -1,6 +1,6 @@
-import { resolve as pathResolve } from "path";
 import { IDownload } from "../../../api/download";
 import { IVideoFile } from "../../../api/VideoFile";
+import { AppConfig } from "../../../provider/AppConfig";
 import { DownloadProvider } from "../../../provider/DownloadProvider";
 
 export class DownloadHelper
@@ -24,7 +24,7 @@ export class DownloadHelper
         }
 
         this.downloadProvider = DownloadProvider.getInstance();
-        this.downloadTask     = pathResolve(__dirname, "../tasks/video.download");
+        this.downloadTask     = AppConfig.get("task.download.ytdl");
     }
 
     /**
@@ -45,6 +45,7 @@ export class DownloadHelper
      * @memberof DownloadManager
      */
     public download(file: IVideoFile) {
+
         const path = "/media/youtube_videos";
         const uri  = `https://www.youtube.com/watch?v=${file.id}`;
 

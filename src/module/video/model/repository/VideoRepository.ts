@@ -58,7 +58,7 @@ export class VideoRepository {
      * @returns
      * @memberof VideoRepository
      */
-    public async insert(file: IVideoFile)
+    public insert(file: IVideoFile): Promise<any>
     {
         const query = `
             INSERT INTO ${this.table}
@@ -66,7 +66,31 @@ export class VideoRepository {
             VALUES(:name,:description,:image,:fileName,:path,:type)
         `;
 
-        const rows = await this.dbProvider.query( query, file)
-        return rows;
+        return this.dbProvider.query( query, file)
+    }
+
+    /**
+     *
+     *
+     * @param {IVideoFile} file
+     * @param {({[key: string]: string | number})} fields
+     * @memberof VideoRepository
+     */
+    public update(file: IVideoFile, fields: {[key: string]: string | number})
+    {
+        const data: string[] = [];
+        Object.keys(fields).forEach( (col) => {
+            const value = this.dbProvider.getConnection().escape(fields[col]);
+            data.push(`${col}='${value}'`)
+        });
+
+        const query = `
+            UPDATE ${this.table}
+            SET ${data.join(",")}
+            WHERE video_id=${file.video_id}`;
+
+        console.log(query);
+
+        return this.dbProvider.query(query);
     }
 }

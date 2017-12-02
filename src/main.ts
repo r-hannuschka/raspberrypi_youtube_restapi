@@ -69,7 +69,9 @@ export class Server {
    * @method config
    */
   public config() {
-    this.app.use(express.static(path.join(__dirname, "public")));
+
+    // this.app.use(express.static(path.join(__dirname, "public")));
+    this.app.use("/media", express.static(path.join(__dirname, "../media")));
 
     // use logger middleware
     this.app.use(logger("dev"));

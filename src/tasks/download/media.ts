@@ -1,7 +1,8 @@
 import * as fs from "fs";
-import { get as httpGet, IncomingHttpHeaders, IncomingMessage } from "http";
+import * as request from "request";
+// import { get as httpGet, IncomingHttpHeaders, IncomingMessage } from "http";
 import { parse as urlParse } from "url";
-import { DOWNLOAD_STATE_END } from "../api/download/index";
+import { DOWNLOAD_STATE_END } from "../../api/download/index";
 
 class ImageDownload {
 
@@ -16,6 +17,7 @@ class ImageDownload {
     private fileName: string;
     private uri: string;
     private processId: string;
+    private fileStream;
 
     /**
      * initialize download task
@@ -38,29 +40,26 @@ class ImageDownload {
     public processDownload() {
 
         // create file for download
-        const fileStream = fs.createWriteStream(`${this.directory}/${this.fileName}`);
         const url        = urlParse(this.uri);
         const options    = {
             host: url.host,
             path: url.path,
             port: url.port || 80
-        }
+        };
 
-        httpGet(options, (res: IncomingMessage) => {
-
-            process.send({
-                data: {
-                    loaded: 0,
-                    total: 0
-                },
-                processId: this.processId,
-                state: ImageDownload.DOWNLOAD_STATE_START
-            });
-
-            res.on("data", (data) => {
-                fileStream.write(data);
-                // progressing download we could send a message here
-
+        this.fileStream = fs.createWriteStream(`${this.directory}/${this.fileName}`);
+        const req = request(this.uri);
+        req.on("response", () => {
+                process.send({
+                    data: {
+                        loaded: 0,
+                        total: 0
+                    },
+                    processId: this.processId,
+                    state: ImageDownload.DOWNLOAD_STATE_START
+                });
+            })
+            .on("data", () => {
                 process.send({
                     data: {
                         loaded: 0,
@@ -69,10 +68,9 @@ class ImageDownload {
                     processId: this.processId,
                     state: "progress"
                 });
-            });
-
-            res.on("end", () => {
-                fileStream.end();
+            })
+            .pipe(this.fileStream)
+            .on("close", () => {
                 process.send({
                     data: {
                         loaded: 0,
@@ -82,7 +80,6 @@ class ImageDownload {
                     state: ImageDownload.DOWNLOAD_STATE_END
                 });
             });
-        });
     }
 
     /**

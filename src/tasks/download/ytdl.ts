@@ -55,7 +55,10 @@ class DownloadTask {
         const stream = ytdl(this.uri);
         stream.on("response", this.onResponse.bind(this));
         stream.on("progress", this.onProgress.bind(this));
-        stream.on("end",      this.onEnd.bind(this));
+        stream.on("end",      () => {
+            this.onEnd();
+            stream.removeAllListeners();
+        );
         stream.pipe(this.fileStream);
     }
 

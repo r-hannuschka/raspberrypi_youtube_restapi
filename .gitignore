@@ -1,6 +1,7 @@
 src/module/youtube/etc/config.json
 node_modules
 dist
+media
 .tscache
 tmp
 logs/*
