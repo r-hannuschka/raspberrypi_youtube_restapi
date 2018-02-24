@@ -1,11 +1,9 @@
-import { resolve as pathResolve } from "path";
 import { URL } from "url";
-import { DOWNLOAD_STATE_END, IDownload, IDownloadObserver } from "../../../../api/download";
+import { DOWNLOAD_STATE_END, IDownload, DownloadManager} from "../../../../libs/download";
 import { IFile } from "../../../../api/FileInterface";
 import { IVideoFile } from "../../../../api/VideoFile";
-import { AppConfig } from "../../../../provider/AppConfig";
-import { DownloadProvider } from "../../../../provider/DownloadProvider";
-import { Logger } from "../../../../provider/Logger";
+import { AppConfig } from "../../../../model/AppConfig";
+import { Logger } from "../../../../libs/log";
 import { VideoRepository } from "../../model/repository/VideoRepository";
 
 export class VideoHelper implements IDownloadObserver
@@ -69,16 +67,15 @@ export class VideoHelper implements IDownloadObserver
             throw new Error("use VideoHelper.getInstance()");
         }
 
-        this.downloadProvider = DownloadProvider.getInstance();
+        this.downloadProvider = DownloadManager.getInstance();
         this.videoRepository = VideoRepository.getInstance();
 
         this.downloadProvider.subscribe(this, VideoHelper.DOWNLOAD_GROUP_NAME);
         this.downloads = new Map();
-        this.taskFile = AppConfig.get("task.download.media");
         this.logger = Logger.getInstance();
 
-        this.mediaDir = `${AppConfig.get("paths.media")}/youtube/images`;
-        this.mediaUrl = `${AppConfig.get("web.media")}/youtube/images`;
+        this.mediaDir = AppConfig.get("paths.media.image");
+        this.mediaUrl = AppConfig.get("web.media.image");
     }
 
     public static getInstance() {

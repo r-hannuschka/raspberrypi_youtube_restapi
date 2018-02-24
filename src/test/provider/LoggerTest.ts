@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import * as FileSystem from "fs";
 import * as LineReader from "readline";
-import { Logger } from "../../provider/Logger";
+import { Logger } from "../../libs/log/Log";
 
 describe("LoggerTest", () => {
 

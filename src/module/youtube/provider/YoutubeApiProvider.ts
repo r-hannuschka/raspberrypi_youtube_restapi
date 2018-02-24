@@ -1,6 +1,4 @@
-import { RequestInterface, ResponseInterface } from "../../../api";
-import { Request } from "../../../model/http/Request";
-import { HttpProvider } from "../../../provider/HttpProvider";
+import { HttpProvider, Request, RequestInterface, ResponseInterface  } from "../../../libs/http";
 import { ConfigInterface } from "../api/ConfigInterface";
 import * as ModuleConfig from "../etc/config.json";
 

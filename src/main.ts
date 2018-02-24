@@ -4,7 +4,7 @@ import * as express from "express";
 import * as logger from "morgan";
 import * as path from "path";
 import { SocketIO } from "socket.io";
-import { SocketManager } from "./model/socket/SocketManager";
+import { Socket } from "./libs/socket/Socket";
 
 import errorHandler = require("errorhandler");
 
@@ -58,7 +58,7 @@ export class Server {
 
   public addSocketIO(socket)
   {
-    const socketManager = SocketManager.getInstance();
+    const socketManager = Socket.getInstance();
     socketManager.setConnection(socket)
   }
 

@@ -1,5 +1,5 @@
 import { IVideoFile } from "../../../../api/VideoFile";
-import { Database } from "../../../../provider/Database";
+import { Database } from "../../../../libs/Database";
 import { IVideoResult } from "../../api/VideoResponse";
 
 export class VideoRepository {

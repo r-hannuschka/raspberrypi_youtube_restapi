@@ -1,7 +1,5 @@
-import { EVENT_VIDEO_DOWNLOAD_FINISHED } from "../../api/download";
-import { AbstractModule } from "../AbstractModule";
+import { AbstractModule } from "../../libs/module";
 import { List } from "./controller";
-import { Observer } from "./model/observer/DownloadObserver";
 
 export class VideoModule extends AbstractModule
 {
@@ -30,10 +28,6 @@ export class VideoModule extends AbstractModule
     protected bootstrap()
     {
         this.registerController("index/list", new List());
-
-        const observer = new Observer();
-        this.registerEvent(EVENT_VIDEO_DOWNLOAD_FINISHED, observer);
-
         super.bootstrap();
     }
 }

@@ -1,28 +1,17 @@
-import {
-    DOWNLOAD_STATE_END,
-    EVENT_VIDEO_DOWNLOAD_FINISHED,
-    IDownload,
-    IDownloadObserver
-} from "../../../../api/download";
+import { IChannel, ISocketController } from "../../../../libs/socket";
+import { IObserver } from "../../../../libs/api";
+import { DownloadManager, DownloadTask, TaskFactory, DOWNLOAD_STATE_END } from "../../../../libs/download"
+import { DOWNLOAD_GROUP_NAME, IVideoFile, SOCKET_GROUP_NAME } from '../../api';
 
-import { IChannel, ISocketController } from "../../../../api/socket/";
-import { IVideoFile } from "../../../../api/VideoFile";
-import { DownloadProvider } from "../../../../provider/DownloadProvider";
-import { PubSub } from "../../../../provider/PubSub";
-import { DownloadHelper } from "../../helper/DownloadHelper";
-
-export class DownloadController implements IDownloadObserver, ISocketController {
+export class DownloadController implements IObserver<DownloadTask>, ISocketController {
 
     private socketChannel: IChannel;
 
-    private downloadProvider: DownloadProvider;
-
-    private downloadHelper: DownloadHelper;
+    private downloadManager: DownloadManager;
 
     public constructor() {
-        this.downloadProvider = DownloadProvider.getInstance();
-        this.downloadProvider.subscribe(this, DownloadHelper.GROUP_NAME);
-        this.downloadHelper = DownloadHelper.getInstance();
+        this.downloadManager = DownloadManager.getInstance();
+        this.downloadManager.subscribe(this, SOCKET_GROUP_NAME);
     }
 
     /**
@@ -34,12 +23,10 @@ export class DownloadController implements IDownloadObserver, ISocketController 
         const param = socketRequest.param;
         switch (socketRequest.action) {
             case "download":
-                this.downloadHelper
-                    .download(param);
+                this.downloadAction(param);
                 break;
             case "cancel":
-                this.downloadProvider
-                    .cancelDownload(param);
+                this.cancelAction(param);
                 break;
             default:
         }
@@ -54,17 +41,25 @@ export class DownloadController implements IDownloadObserver, ISocketController 
     }
 
     /**
+     * Download Task has been updated
      *
      * @param {String} event
      * @param data
      */
-    public update(download: IDownload) {
+    public update(task: DownloadTask) {
 
-        if ( download.state === DOWNLOAD_STATE_END ) {
-            PubSub.publish(EVENT_VIDEO_DOWNLOAD_FINISHED, download.raw as IVideoFile);
+        // create new task and save image
+        // and after you have done this 
+        // save whole file information into the database
+        // at this point it is usefull we have an observer on the task himself
+        // if the download state for an image has been changed
+        // create new download task and save all informations in DB after this is done
+        if ( task.getState() === DOWNLOAD_STATE_END ) {
+            // @todo implement
         }
 
-        this.socketChannel.emit(`download_provider.download${download.state}`, download);
+        // @todo convert this task informations
+        this.socketChannel.emit(`download_provider.download${task.getState()}`, task);
     }
 
     /**
@@ -75,6 +70,25 @@ export class DownloadController implements IDownloadObserver, ISocketController 
      */
     public onConnected() {
         return Array.from(
-            this.downloadProvider.getDownloads(DownloadHelper.GROUP_NAME));
+            this.downloadManager.getDownloads(SOCKET_GROUP_NAME));
+    }
+
+    protected downloadAction (file: IVideoFile) {
+
+        const uri  = `https://www.youtube.com/watch?v=${file.video_id}`;
+
+        let fileName = `${file.name.replace(/\s/g, "_")}`;
+        fileName = fileName.replace(/[^\w\d]/g, "");
+        fileName = fileName + ".mp4";
+
+        const task = TaskFactory.createYoutubeTask(fileName, uri, DOWNLOAD_GROUP_NAME);
+        this.downloadManager.registerDownload(task);
+    }
+
+    protected cancelAction (id: string) {
+        // get task id again ...
+        // task by id finden
+        this.downloadManager
+            .cancelDownload(task);
     }
 }

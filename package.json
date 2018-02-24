@@ -8,6 +8,7 @@
     "clear": "rimraf dist/*",
     "copy": "npm run copy:config",
     "copy:config": "copy ./src/**/etc/config.json dist",
+    "preinstall": "bash ./bin/install.sh",
     "start": "npm run build:dev && npm run server:start & npm run ts:watch",
     "test": "mocha -r ts-node/register src/test/**/*Test.ts",
     "server:start": "node ./bin/run",
@@ -20,7 +21,7 @@
   "author": "Ralf Hannuschka",
   "license": "ISC",
   "dependencies": {
-    "async": "^2.5.0",
+    "async": "^2.6.0",
     "body-parser": "1.17.2",
     "cookie-parser": "1.4.3",
     "errorhandler": "1.5.0",
@@ -30,7 +31,7 @@
     "morgan": "1.8.2",
     "request": "2.81.0",
     "request-promise-native": "1.0.4",
-    "ytdl-core": "^0.17.1"
+    "ytdl-core": "^0.20.2"
   },
   "devDependencies": {
     "@types/body-parser": "1.16.5",
@@ -40,17 +41,17 @@
     "@types/method-override": "0.0.30",
     "@types/mocha": "2.2.42",
     "@types/morgan": "1.7.32",
-    "@types/sinon": "^2.3.3",
+    "@types/sinon": "^2.3.7",
     "chai": "4.1.1",
     "copy": "0.3.1",
     "karma": "1.7.1",
     "karma-chai": "0.1.0",
     "karma-mocha-reporter": "2.2.4",
     "mocha": "3.5.0",
-    "nock": "^9.0.14",
+    "nock": "^9.1.10",
     "nodemon": "1.11.0",
     "rimraf": "2.6.1",
-    "sinon": "^3.2.1",
+    "sinon": "^3.3.0",
     "ts-node": "3.3.0",
     "tslint": "5.7.0",
     "typescript": "2.4.2"
