@@ -2,6 +2,7 @@ import * as path from "path";
 
 export * from "./Download";
 export * from "./Message";
+export * from "./DownloadData";
 
 export const DOWNLOAD_STATE_CANCEL         = "cancel";
 export const DOWNLOAD_STATE_END            = "end";

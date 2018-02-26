@@ -12,24 +12,55 @@ import {
     DOWNLOAD_STATE_START,
     DOWNLOAD_STATE_PROGRESS,
     IDownload,
+    IDownloadData,
     IMessage,
 } from "./api";
+import { Observable } from "../observer/Observable";
 
-export class DownloadManager {
+export class DownloadManager extends Observable<IDownloadData> {
 
     private taskQueue: any;
 
-    // alle downloads egal ob laufend oder nicht
+    /**
+     * all download task
+     * 
+     * @private
+     * @type {Set<DownloadTask>}
+     * @memberof DownloadManager
+     */
     private downloadTasks: Set<DownloadTask>;
 
-    // laufende Prozesse Task verbunden mit Process
+    /**
+     * all running download tasks 
+     * 
+     * @private
+     * @type {WeakMap<DownloadTask, ChildProcess>}
+     * @memberof DownloadManager
+     */
     private processes: WeakMap<DownloadTask, ChildProcess>
 
+    /**
+     * Log Service
+     *
+     * @private
+     * @type {Logger}
+     * @memberof DownloadManager
+     */
     private logService: Logger;
 
+    /**
+     * 
+     * 
+     * @private
+     * @static
+     * @type {DownloadManager}
+     * @memberof DownloadManager
+     */
     private static readonly instance: DownloadManager = new DownloadManager();
 
     public constructor() {
+
+        super();
 
         if (DownloadManager.instance) {
             throw new Error("use DownloadManager::getInstance()");
@@ -92,7 +123,7 @@ export class DownloadManager {
     }
 
     /**
-     *
+     * cancel queued or running download
      *
      * @param {any} id
      * @memberof Download
@@ -134,6 +165,7 @@ export class DownloadManager {
     }
 
     /**
+     * get all downloads
      *
      * @param {String} groupname
      */
@@ -151,11 +183,13 @@ export class DownloadManager {
     }
 
     /**
-     *
-     *
+     * update download task notify observers
+     * 
      * @private
-     * @param {IDownloadMessage} data
-     * @memberof DownloadProvider
+     * @param {DownloadTask} task 
+     * @param {string} state 
+     * @param {any} [data=null] 
+     * @memberof DownloadManager
      */
     private updateTask(task: DownloadTask, state: string, data = null): void {
 
@@ -178,6 +212,7 @@ export class DownloadManager {
         download.setError(data.error);
 
         task.update();
+        this.publish(task.toJSON(), task.getGroupName());
     }
 
     /**
@@ -188,7 +223,6 @@ export class DownloadManager {
      * @memberof DownloadManager
      */
     private removeDownload(task) {
-
         if (this.downloadTasks.has(task)) {
             this.downloadTasks.delete(task);
         }

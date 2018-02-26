@@ -1,25 +1,8 @@
 import { Observable } from "../../observer/Observable";
-import { IDownload } from "../api";
+import { IDownload, IDownloadData } from "../api";
 import { Download } from "./Download";
 
-interface DownloadData {
-
-    error: string;
-
-    group: string; 
-
-    loaded: number;
-
-    name: string;
-
-    id: string;
-
-    size: number;
-
-    state: string;
-}
-
-export class DownloadTask extends Observable<DownloadData>
+export class DownloadTask extends Observable<IDownloadData>
 {
     private download: Download;
 
@@ -96,7 +79,7 @@ export class DownloadTask extends Observable<DownloadData>
         this.publish( this.toJSON() );
     }
 
-    public toJSON(): DownloadData {
+    public toJSON(): IDownloadData {
         const download: IDownload = this.getDownload();
         return {
             error : download.getError(),

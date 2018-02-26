@@ -1,5 +1,5 @@
 import { IChannel, ISocketController } from "../../../../libs/socket";
-import { DownloadManager, DownloadTask, TaskFactory, DOWNLOAD_STATE_END, IDownload } from "../../../../libs/download"
+import { DownloadManager, DownloadTask, TaskFactory } from "../../../../libs/download"
 import { DOWNLOAD_GROUP_NAME, IVideoFile, SOCKET_GROUP_NAME } from '../../api';
 
 export class DownloadController implements ISocketController {
@@ -10,6 +10,18 @@ export class DownloadController implements ISocketController {
 
     public constructor() {
         this.downloadManager = DownloadManager.getInstance();
+        this.registerSubscriptions();
+    }
+
+    /**
+     * 
+     * @private
+     * @memberof DownloadController
+     */
+    private registerSubscriptions() {
+        this.downloadManager.subscribe( (data: any) => {
+            this.socketChannel.emit(`download_provider.download${data.state}`, data);
+        }, DOWNLOAD_GROUP_NAME);
     }
 
     /**
@@ -39,23 +51,6 @@ export class DownloadController implements ISocketController {
     }
 
     /**
-     * Download Task has been updated
-     *
-     * @param {String} event
-     * @param data
-     */
-    public update(task: DownloadTask) {
-
-        const download: IDownload = task.getDownload();
-
-        if ( download.getState() === DOWNLOAD_STATE_END ) {
-            // @todo implement
-        }
-
-        this.socketChannel.emit(`download_provider.download${download.getState()}`, task.toJSON() );
-    }
-
-    /**
      * new client has connected to our channel
      *
      * @returns IDownloads[]
@@ -79,14 +74,8 @@ export class DownloadController implements ISocketController {
      * @memberof DownloadController
      */
     protected downloadAction (file: IVideoFile) {
-
         const uri  = `https://www.youtube.com/watch?v=${file.video_id}`;
         const task = TaskFactory.createYoutubeTask(file.name, uri, DOWNLOAD_GROUP_NAME);
-
-        task.subscribe( (data: any) => {
-            this.socketChannel.emit(`download_provider.download${data.state}`, data);
-        });
-
         this.downloadManager.registerDownload(task);
     }
 

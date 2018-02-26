@@ -1,37 +1,49 @@
 export abstract class Observable<T> {
 
-    private  subscriptions: Set<Function> = new Set();
+    private  subscriptions: Map<string, Set<Function>> = new Map();
 
     /**
-     *
-     * @static
-     * @param {any} event
-     * @param {() => void} listener
-     * @returns {() => void} unsubscribe
-     * @memberof PubSub
+     * subscribe to object
+     * 
+     * @param {any} subscriber 
+     * @param {string} [topic='gobal'] 
+     * @returns 
+     * @memberof Observable
      */
-    public subscribe(subscriber) {
+    public subscribe(subscriber, topic = 'gobal') {
 
-        if ( ! this.subscriptions.has(subscriber) ) {
-            this.subscriptions.add(subscriber);
+        if ( ! this.subscriptions.has(topic) ) {
+            this.subscriptions.set(topic, new Set());
         }
+
+        let group = this.subscriptions.get(topic);
+        group.add(subscriber);
 
         // return unsubscribe method
         return {
             unsubscribe: () => {
-                this.subscriptions.delete(subscriber);
+                group.delete(subscriber);
+                if ( ! group.size ) {
+                    this.subscriptions.delete(topic);
+                }
+                group = null;
             }
         }
     }
 
     /**
-     * 
+     * publish data
      * 
      * @param {any} data 
      */
-    protected publish(data: T) {
-        this.subscriptions.forEach(notify => {
-            notify(data);
-        });
+    protected publish(data: T, topic: string = 'gobal') {
+
+        const subscribers = this.subscriptions.get(topic);
+
+        if ( subscribers ) {
+            subscribers.forEach(notify => {
+                notify(data);
+            });
+        }
     }
 }
