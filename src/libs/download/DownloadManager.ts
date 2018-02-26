@@ -2,7 +2,7 @@ import * as async from "async";
 
 import { ChildProcess, fork } from "child_process";
 import { Logger } from "../Log";
-import { IObserver, IObservable } from "../api";
+import { Sanitize } from "../Sanitize";
 import { Download, DownloadTask } from "./model";
 import {
     DOWNLOAD_STATE_CANCEL,
@@ -10,12 +10,12 @@ import {
     DOWNLOAD_STATE_ERROR,
     DOWNLOAD_STATE_QUEUED,
     DOWNLOAD_STATE_START,
-    IMessage
+    DOWNLOAD_STATE_PROGRESS,
+    IDownload,
+    IMessage,
 } from "./api";
 
-// import { IFile } from "../api/FileInterface";
-
-export class DownloadManager implements IObservable<DownloadTask> {
+export class DownloadManager {
 
     private taskQueue: any;
 
@@ -26,8 +26,6 @@ export class DownloadManager implements IObservable<DownloadTask> {
     private processes: WeakMap<DownloadTask, ChildProcess>
 
     private logService: Logger;
-
-    private observers: Map<string, IObserver<DownloadTask>[]>;
 
     private static readonly instance: DownloadManager = new DownloadManager();
 
@@ -47,43 +45,11 @@ export class DownloadManager implements IObservable<DownloadTask> {
         );
 
         this.downloadTasks = new Set();
-        this.observers     = new Map();
         this.processes     = new WeakMap();
     }
 
     public static getInstance(): DownloadManager {
         return DownloadManager.instance;
-    }
-
-    /**
-     *
-     * @param {IObserver} observer
-     */
-    public subscribe(observer: IObserver<DownloadTask>, group = "global") {
-
-        if (this.observers.has(group)) {
-            this.observers.get(group).push(observer);
-        } else {
-            this.observers.set(group, [observer]);
-        }
-    }
-
-    /**
-     *
-     * @param {IObserver} observer
-     */
-    public unsubscribe(observer: IObserver<DownloadTask>, group = "global") {
-
-        if ( this.observers.has(group) ) {
-            const observers = this.observers.get(group);
-            const index     = observers.indexOf(observer);
-
-            observers.splice(index, 1);
-
-            if ( ! observers.length ) {
-                this.observers.delete(group);
-            }
-        }
     }
 
     /**
@@ -95,6 +61,7 @@ export class DownloadManager implements IObservable<DownloadTask> {
      */
     public registerDownload(task: DownloadTask, autostart = true)  {
 
+        task.setTaskId(Math.random().toString(32).substr(2));
         this.downloadTasks.add(task);
 
         this.logService.log(
@@ -108,20 +75,19 @@ export class DownloadManager implements IObservable<DownloadTask> {
     }
 
     /**
-     * starts a download and loads them into a queue
-     *
-     * @param {IDownload} download
-     * @memberof Download
+     * 
+     * 
+     * @param {DownloadTask} task 
+     * @memberof DownloadManager
      */
     public startDownload(task: DownloadTask) {
 
         this.logService.log(
             Logger.LOG_DEBUG,
-            `start download: ${task.getDownload().getName()}`
+            `add download to queue: ${task.getDownload().getName()}`
         );
 
-        task.setState(DOWNLOAD_STATE_QUEUED);
-        this.updateTask(task);
+        this.updateTask(task, DOWNLOAD_STATE_QUEUED);
         this.taskQueue.push(task);
     }
 
@@ -134,12 +100,13 @@ export class DownloadManager implements IObservable<DownloadTask> {
     public cancelDownload(_task) {
 
         const task: DownloadTask = this.downloadTasks[_task];
+        const download: Download = task.getDownload() as Download;
 
         if (!task) {
             return;
         }
 
-        if (task.getState() === DOWNLOAD_STATE_QUEUED) {
+        if (download.getState() === DOWNLOAD_STATE_QUEUED) {
             this.taskQueue.remove((item: any) => {
                 if (item !== task) {
                     return false;
@@ -148,8 +115,22 @@ export class DownloadManager implements IObservable<DownloadTask> {
             });
         };
 
-        task.setState( DOWNLOAD_STATE_CANCEL );
-        this.updateTask(task);
+        this.updateTask(task, DOWNLOAD_STATE_CANCEL);
+    }
+
+    /**
+     * find task by id
+     * 
+     * @param id 
+     */
+    public findTaskById(id: string): DownloadTask | null {
+        let task: DownloadTask | null = null;
+        this.downloadTasks.forEach( (t: DownloadTask) => {
+            if ( t.getTaskId() === id ) {
+                task = t;
+            }
+        });
+        return task;
     }
 
     /**
@@ -171,30 +152,12 @@ export class DownloadManager implements IObservable<DownloadTask> {
 
     /**
      *
-     * @param action
-     * @param download
-     */
-    public notify(task: DownloadTask) {
-
-        let observers = this.observers.get("global") || [];
-        observers = observers.concat(
-            this.observers.get(task.getGroupName()) || []);
-
-        observers.forEach((observer: IObserver<DownloadTask>) => {
-            observer.update(task);
-        });
-    }
-
-    /**
-     *
      *
      * @private
      * @param {IDownloadMessage} data
      * @memberof DownloadProvider
      */
-    private updateTask(task: DownloadTask): void {
-
-        const state = task.getState();
+    private updateTask(task: DownloadTask, state: string, data = null): void {
 
         if (state === DOWNLOAD_STATE_CANCEL ||
             state === DOWNLOAD_STATE_ERROR ||
@@ -205,7 +168,16 @@ export class DownloadManager implements IObservable<DownloadTask> {
             }
             this.removeDownload(task);
         }
-        this.notify(task);
+
+        data = data || { loaded: 0, size: 0, error: '' };
+
+        const download: Download = task.getDownload() as Download;
+        download.setState(state);
+        download.setLoaded(data.loaded);
+        download.setSize(data.size);
+        download.setError(data.error);
+
+        task.update();
     }
 
     /**
@@ -232,23 +204,22 @@ export class DownloadManager implements IObservable<DownloadTask> {
      */
     private runTask(task: DownloadTask, done) {
 
+        const download: IDownload = task.getDownload();
+
+        const name = Sanitize.sanitizeFileName(
+            download.getName());
+
         const params = [
-            "--dir" , task.getDownload().getDestination(),
-            "--name", task.getDownload().getName(),
-            "--uri" , task.getDownload().getUri()
+            "--dir" , download.getDestination(),
+            "--name", name,
+            "--uri" , download.getUri()
         ];
 
         const childProcess = this.createChildProcess(task.getTaskFile(), params);
         this.processes.set(task, childProcess);
 
-        task.setState(DOWNLOAD_STATE_START);
-
         childProcess.on("message",  (response: IMessage) => {
             this.onDownloadTaskMessage(response, task);
-        });
-
-        childProcess.stderr.on('data', (err) => {
-            console.log ( err.toString() );
         });
 
         childProcess.once("exit", () => {
@@ -259,7 +230,7 @@ export class DownloadManager implements IObservable<DownloadTask> {
         // send message to child process
         childProcess.send("start");
 
-        this.updateTask(task);
+        this.updateTask(task, DOWNLOAD_STATE_START );
     }
 
     /**
@@ -269,17 +240,18 @@ export class DownloadManager implements IObservable<DownloadTask> {
      */
     private onDownloadTaskMessage(response: IMessage, task: DownloadTask) {
 
-        task.setState( response.state || DOWNLOAD_STATE_ERROR );
+        const state = response.state || DOWNLOAD_STATE_ERROR;
+        const data = {
+            error : response.error,
+            loaded: response.data.loaded || 0,
+            size  : response.data.total  || 0
+        };
 
-        const download: Download = task.getDownload() as Download;
-
-        if (response.state !== DOWNLOAD_STATE_ERROR) {
-            download.setLoaded(response.data.loaded || 0)
-            download.setSize(response.data.total || 0);
+        if ( response.state !== DOWNLOAD_STATE_PROGRESS ) {
+            this.logService.log(Logger.LOG_DEBUG, JSON.stringify(response) );
         }
 
-        download.setError(response.error);
-        this.updateTask(task);
+        this.updateTask(task, state, data);
     }
 
     private createChildProcess(task, param): ChildProcess {

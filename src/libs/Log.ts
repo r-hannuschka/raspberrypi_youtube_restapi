@@ -88,18 +88,17 @@ export class Logger {
         return new Promise<void>((resolve, reject) => {
 
             let pathStat = null;
-            const logFile = path || this.path;
-            console.log ( logFile );
+            const logPath = path || this.path;
 
             try {
-                pathStat = FileSystem.statSync( logFile );
+                pathStat = FileSystem.statSync( logPath );
             } catch (e) { pathStat = null; }
 
-            if (!pathStat || !pathStat.isDirectory()) {
+            if ( ! pathStat || ! pathStat.isDirectory()) {
                 throw new Error(`${path || this.path} is not an valid directory`);
             }
 
-            const stream: FileSystem.WriteStream = this.getWriteStream(type, logFile);
+            const stream: FileSystem.WriteStream = this.getWriteStream(type, logPath);
             stream.write(this.createLogMessage(type, body), () => {
                 resolve();
             });

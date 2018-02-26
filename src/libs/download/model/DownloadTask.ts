@@ -1,17 +1,30 @@
-import { IObserver, IObservable } from "../../observable";
+import { Observable } from "../../observer/Observable";
 import { IDownload } from "../api";
 import { Download } from "./Download";
 
-export class DownloadTask implements IObservable<IDownload>
+interface DownloadData {
+
+    error: string;
+
+    group: string; 
+
+    loaded: number;
+
+    name: string;
+
+    id: string;
+
+    size: number;
+
+    state: string;
+}
+
+export class DownloadTask extends Observable<DownloadData>
 {
     private download: Download;
 
-    private observers: Set<IObserver<IDownload>> = new Set();
-
     private taskFile: string;
 
-    private state: string;
-    
     private groupName: string;
 
     private taskId: string;
@@ -22,10 +35,6 @@ export class DownloadTask implements IObservable<IDownload>
 
     public getGroupName(): string {
         return this.groupName;
-    }
-
-    public getState(): string {
-        return this.state;
     }
 
     public getTaskId(): string {
@@ -63,18 +72,9 @@ export class DownloadTask implements IObservable<IDownload>
         this.groupName = name;
     }
 
-    /**
-     * 
-     * @param state 
-     */
-    public setState(state: string) {
-        this.state = state;
-    }
-
     public setTaskId(id: string) {
         this.taskId = id;
     }
-
 
     /**
      * 
@@ -92,39 +92,20 @@ export class DownloadTask implements IObservable<IDownload>
      * 
      * @memberof DownloadTask
      */
-    public updateDownload(state, data: IDownload) {
+    public update() {
+        this.publish( this.toJSON() );
     }
 
-    /**
-     * 
-     * @param observer 
-     */
-    public subscribe(observer: IObserver<IDownload>) {
-
-        if ( ! this.observers.has(observer) ) {
-            this.observers.add(observer);
-        }
-    }
-
-    /**
-     * 
-     * @param observer 
-     */
-    public unsubscribe(observer: IObserver<IDownload>) {
-
-        if ( ! this.observers.has(observer) ) {
-            this.observers.delete(observer);
-        }
-    }
-
-    /**
-     * 
-     * @param data 
-     */
-    public notify() {
-
-        this.observers.forEach( (observer: IObserver<IDownload>) => {
-            observer.update(this.download);
-        });
+    public toJSON(): DownloadData {
+        const download: IDownload = this.getDownload();
+        return {
+            error : download.getError(),
+            group : this.getGroupName(),
+            state : download.getState(),
+            loaded: download.getLoaded(),
+            name  : download.getName(),
+            id    : this.getTaskId(),
+            size  : download.getSize()
+        };
     }
 }

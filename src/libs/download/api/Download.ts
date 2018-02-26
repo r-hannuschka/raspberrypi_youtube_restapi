@@ -49,5 +49,21 @@ export interface IDownload {
      * @returns {string} 
      * @memberof IDownload
      */
+    getFileName(): string;
+
+    /**
+     * 
+     * 
+     * @returns {string} 
+     * @memberof IDownload
+     */
     getDestination(): string;
+
+    /**
+     * returns current download status
+     * 
+     * @returns {string} 
+     * @memberof IDownload
+     */
+    getState(): string;
 }

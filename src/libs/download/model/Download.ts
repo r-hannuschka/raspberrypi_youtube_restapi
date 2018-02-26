@@ -6,13 +6,17 @@ export class Download implements IDownload {
 
     private error: string;
 
-    private loaded: number;
+    private loaded: number = 0;
 
-    private size: number;
+    private size: number = 0;
 
     private name: string;
 
     private destination: string;
+
+    private fileName: string;
+
+    private state: string;
 
     public getDestination() {
         return this.destination;
@@ -30,8 +34,16 @@ export class Download implements IDownload {
         return this.name;
     }
 
+    public getFileName(): string {
+        return this.fileName;
+    }
+
     public getSize(): number {
         return this.size;
+    }
+
+    public getState(): string {
+        return this.state;
     }
 
     public getUri(): string {
@@ -40,6 +52,10 @@ export class Download implements IDownload {
 
     public setDestination( dest: string) {
         this.destination = dest;
+    }
+
+    public setFileName(name: string) {
+        this.fileName = name;
     }
 
     public setError(error: string) {
@@ -56,6 +72,10 @@ export class Download implements IDownload {
 
     public setSize(size: number) {
         this.size = size;
+    }
+
+    public setState(state: string) {
+        this.state = state;
     }
 
     public setUri(uri: string) {

@@ -1,7 +1,6 @@
 import * as fs from "fs";
 import { IncomingHttpHeaders, IncomingMessage } from "http";
 import { AppConfig } from "../../AppConfig";
-import { Logger } from "../../Log";
 import * as ytdl from "ytdl-core";
 import {
     DOWNLOAD_STATE_END,
@@ -9,17 +8,21 @@ import {
     DOWNLOAD_STATE_ERROR,
     DOWNLOAD_STATE_PROGRESS
 } from "../api";
+import { FileExistsException } from '../model/exception/FileExists';
 
 class DownloadTask {
 
     private directory: string = AppConfig.get('paths.media.video');
+
     private fileName: string = "yt-download";
+
     private uri: string;
+
     private fileStream: fs.WriteStream;
 
-    private logger = Logger.getInstance();
+    private total: number = 0;
 
-    private processId: string;
+    private loaded: number = 0;
 
     /**
      * initialize download task
@@ -29,23 +32,17 @@ class DownloadTask {
     public initialize() {
         this.loadProcessParameters();
 
-        process.on("message", (id = "123") => {
-            this.processId =  123;
-
             this.initializeDownload()
                 .then(() => {
                     this.processDownload();
                 })
-                .catch((error) => {
-                    this.logger.log(Logger.LOG_ERROR, `${__filename}: ${error}`);
-                    process.send({
-                        error,
-                        processId: this.processId,
-                        state: DOWNLOAD_STATE_ERROR,
-                    });
-                    process.exit(1);
-                });
-        });
+                .catch( (exception) => {
+                    if ( exception instanceof FileExistsException ) {
+                        this.finishDownload(exception.message, DOWNLOAD_STATE_END);
+                    } else {
+                        this.finishDownload(exception.message || exception, DOWNLOAD_STATE_ERROR);
+                    }
+                })
     }
 
     /**
@@ -55,17 +52,14 @@ class DownloadTask {
 
         // create file for download
         this.fileStream = fs.createWriteStream(`${this.directory}/${this.fileName}`, {flags: 'wx' });
-        this.fileStream.on('error', (error) => {
-            this.logger.log(Logger.LOG_ERROR, `${__filename}: ${error}`);
-        });
 
         // create youtube download stream
         const stream = ytdl(this.uri);
         stream.on("response", this.onResponse.bind(this));
         stream.on("progress", this.onProgress.bind(this));
-        stream.on("end",      () => {
-            this.onEnd();
+        stream.on("end"     , () => {
             stream.removeAllListeners();
+            this.finishDownload('Download finished', DOWNLOAD_STATE_END);
         });
         stream.pipe(this.fileStream);
     }
@@ -98,20 +92,64 @@ class DownloadTask {
     }
 
     /**
-     * try to load meta informations from the video
-     *
-     * @returns {boolean}
+     * 
+     * 
+     * @private
+     * @returns {Promise<ytdl.videoInfo>} 
+     * @memberof DownloadTask
      */
-    private async initializeDownload() {
+    private async initializeDownload(): Promise<ytdl.videoInfo>
+    {
+        this.validateDirectory();
+        this.validateFile(`${this.directory}/${this.fileName}`);
+        return ytdl.getInfo(this.uri);
+    }
 
-        try {
-            this.validateDirectory();
-            await ytdl.getInfo(this.uri);
-        } catch (exception) {
-            return Promise.reject(exception.message);
-        }
+    /**
+     * video response has been found and start downloading
+     *
+     * @param {IncomingMessage} response
+     */
+    private onResponse(response: IncomingMessage)
+    {
 
-        return Promise.resolve();
+        const headers: IncomingHttpHeaders = response.headers;
+        const total: number = parseInt(headers["content-length"] as string, 10);
+
+        this.total = total;
+        this.updateDownload('Download starting', DOWNLOAD_STATE_START);
+    }
+
+    /**
+     * download in progress
+     *
+     * @param {number} chunk length
+     * @param {number} loaded downloaded total
+     * @param {number} size total size
+     */
+    private onProgress(chunk: number, loaded: number)
+    {
+        this.loaded = loaded;
+        this.updateDownload('Download in progress', DOWNLOAD_STATE_PROGRESS);
+    };
+
+    private updateDownload(message, state): void
+    {
+        process.send({
+            data: {
+                message,
+                file: `${this.directory}/${this.fileName}`,
+                loaded: this.loaded,
+                total: this.total
+            },
+            state
+        });
+    }
+
+    private finishDownload(message: string = "", state): void 
+    {
+        this.updateDownload(message, state);
+        process.exit(0);
     }
 
     /**
@@ -125,66 +163,19 @@ class DownloadTask {
         if ( fs.existsSync(this.directory) ) {
             const directoryStats = fs.statSync(this.directory);
             if ( ! directoryStats.isDirectory() ) {
-                throw new Error(`${this.directory} exists but is not an directory.`);
+                throw new DirectoryNotExistsException(`${this.directory} exists but is not an directory.`);
             }
         } else {
             fs.mkdirSync(this.directory);
         }
     }
 
-    /**
-     * video response has been found and start downloading
-     *
-     * @param {IncomingMessage} response
-     */
-    private onResponse(response: IncomingMessage) {
-
-        const headers: IncomingHttpHeaders = response.headers;
-        const total: number = parseInt(headers["content-length"] as string, 10);
-
-        process.send({
-            data: {
-                loaded: 0,
-                total
-            },
-            processId: this.processId,
-            state: DOWNLOAD_STATE_START,
-        });
+    private validateFile(path: string) {
+        if ( fs.existsSync(path) ) {
+            throw new FileExistsException(`file allready exists: ${this.fileName}`);
+        }
     }
-
-    /**
-     * download in progress
-     *
-     * @param {number} chunk length
-     * @param {number} loaded downloaded total
-     * @param {number} size total size
-     */
-    private onProgress(chunk: number, loaded: number, total: number) {
-
-        this.logger.log(Logger.LOG_DEBUG, 'progressing download');
-        process.send({
-            data: {
-                loaded,
-                total
-            },
-            processId: this.processId,
-            state: DOWNLOAD_STATE_PROGRESS,
-        });
-    };
-
-    /**
-     * download has finished
-     */
-    private onEnd() {
-        process.send({
-            data: {},
-            processId: this.processId,
-            state: DOWNLOAD_STATE_END,
-        });
-        process.exit(0);
-    };
 }
 
 const downloadTask: DownloadTask = new DownloadTask();
-console.log("WTF");
 downloadTask.initialize();
