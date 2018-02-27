@@ -6,7 +6,8 @@ import {
     DOWNLOAD_STATE_END,
     DOWNLOAD_STATE_START,
     DOWNLOAD_STATE_ERROR,
-    DOWNLOAD_STATE_PROGRESS
+    DOWNLOAD_STATE_PROGRESS,
+    DOWNLOAD_STATE_CANCEL
 } from "../api";
 import { FileExistsException } from '../model/exception/FileExists';
 import { DirectoryNotExistsException } from '../model/exception/DirectoryNotExsists';
@@ -21,9 +22,26 @@ class DownloadTask {
 
     private fileStream: fs.WriteStream;
 
+    private ytdlStream: any;
+
     private total: number = 0;
 
     private loaded: number = 0;
+
+    public cancel() {
+
+        this.ytdlStream.destroy();
+        this.fileStream.destroy();
+
+        this.ytdlStream = null;
+        this.fileStream = null;
+
+        // remove file 
+        if (fs.existsSync(`${this.directory}/${this.fileName}`)) {
+            fs.unlinkSync(`${this.directory}/${this.fileName}`);
+        }
+        this.finishDownload('Download Cancled', DOWNLOAD_STATE_CANCEL);
+    }
 
     /**
      * initialize download task
@@ -32,25 +50,23 @@ class DownloadTask {
      */
     public initialize() {
         this.loadProcessParameters();
-
-            this.initializeDownload()
-                .then(() => {
-                    this.processDownload();
-                })
-                .catch( (exception) => {
-                    if ( exception instanceof FileExistsException ) {
-                        this.finishDownload(exception.message, DOWNLOAD_STATE_END);
-                    } else {
-                        this.finishDownload(exception.message || exception, DOWNLOAD_STATE_ERROR);
-                    }
-                })
+        this.initializeDownload()
+            .then(() => {
+                this.processDownload();
+            })
+            .catch( (exception) => {
+                if ( exception instanceof FileExistsException ) {
+                    this.finishDownload(exception.message, DOWNLOAD_STATE_END);
+                } else {
+                    this.finishDownload(exception.message || exception, DOWNLOAD_STATE_ERROR);
+                }
+            })
     }
 
     /**
      * processing download
      */
     public processDownload() {
-
         // create file for download
         this.fileStream = fs.createWriteStream(`${this.directory}/${this.fileName}`, {flags: 'wx' });
 
@@ -63,6 +79,7 @@ class DownloadTask {
             this.finishDownload('Download finished', DOWNLOAD_STATE_END);
         });
         stream.pipe(this.fileStream);
+        this.ytdlStream = stream;
     }
 
     /**
@@ -179,4 +196,10 @@ class DownloadTask {
 }
 
 const downloadTask: DownloadTask = new DownloadTask();
-downloadTask.initialize();
+process.on('message', (action) => {
+    if ( action === 'cancel') {
+        downloadTask.cancel();
+        return;
+    }
+    downloadTask.initialize();
+});

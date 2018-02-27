@@ -136,7 +136,6 @@ export class DownloadManager extends Observable<IDownloadData> {
 
         if (download.getState() === DOWNLOAD_STATE_QUEUED) {
             this.taskQueue.remove((item: any) => {
-
                 if (item.data.taskId !== task.getTaskId() ) {
                     return false;
                 }
@@ -144,7 +143,7 @@ export class DownloadManager extends Observable<IDownloadData> {
             });
         };
 
-        this.updateTask(task, DOWNLOAD_STATE_CANCEL);
+        this.processes.get(task).send('cancel');
     }
 
     /**
@@ -221,6 +220,7 @@ export class DownloadManager extends Observable<IDownloadData> {
      * @memberof DownloadManager
      */
     private removeDownload(task) {
+
         if (this.downloadTasks.has(task)) {
             this.downloadTasks.delete(task);
         }
