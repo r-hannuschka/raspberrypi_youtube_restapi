@@ -1,4 +1,4 @@
-import { IVideoFile } from "../../../../api/VideoFile";
+import { IVideoFile } from "../../../../libs/file/api/VideoFile";
 import { Database } from "../../../../libs/Database";
 import { IVideoResult } from "../../api/VideoResponse";
 

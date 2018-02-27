@@ -123,23 +123,21 @@ export class DownloadManager extends Observable<IDownloadData> {
     }
 
     /**
-     * cancel queued or running download
-     *
-     * @param {any} id
-     * @memberof Download
+     * 
+     * @param <DownloadTask> task
      */
-    public cancelDownload(_task) {
+    public cancelDownload(task: DownloadTask) {
 
-        const task: DownloadTask = this.downloadTasks[_task];
-        const download: Download = task.getDownload() as Download;
-
-        if (!task) {
+        if ( ! task ) {
             return;
         }
 
+        const download: Download = task.getDownload() as Download;
+
         if (download.getState() === DOWNLOAD_STATE_QUEUED) {
             this.taskQueue.remove((item: any) => {
-                if (item !== task) {
+
+                if (item.data.taskId !== task.getTaskId() ) {
                     return false;
                 }
                 return true;

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ControllerInterface } from "../../../../api/ControllerInterface";
+import { ControllerInterface } from "../../../../libs/module/api/ControllerInterface";
 import { VideoRepository } from "../../model/repository/VideoRepository";
 
 export class List implements ControllerInterface

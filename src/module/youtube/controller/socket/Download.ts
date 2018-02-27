@@ -87,6 +87,7 @@ export class DownloadController implements ISocketController {
      * @memberof DownloadController
      */
     protected cancelAction (id: string) {
+
         const task: DownloadTask = this.downloadManager.findTaskById(id);
         this.downloadManager.cancelDownload(task);
     }

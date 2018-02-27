@@ -9,6 +9,7 @@ import {
     DOWNLOAD_STATE_PROGRESS
 } from "../api";
 import { FileExistsException } from '../model/exception/FileExists';
+import { DirectoryNotExistsException } from '../model/exception/DirectoryNotExsists';
 
 class DownloadTask {
 

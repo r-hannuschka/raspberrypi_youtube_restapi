@@ -1,4 +1,3 @@
-import { DownloadManager, TaskFactory } from "../../../libs/download";
 import { IVideoFile } from "../api/VideoFile";
 
 export class Download

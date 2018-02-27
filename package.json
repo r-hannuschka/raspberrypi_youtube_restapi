@@ -14,8 +14,8 @@
     "server:start": "node ./bin/run",
     "server:restart": "node ./bin/stop && node ./bin/run",
     "ts:build-dev": "npm run ts:lint && npm run ts:compile",
-    "ts:compile": "tsc 1>>logs/ts-error.log || echo 'error: ts-compile, see logs/ts-error.log for more informations'",
-    "ts:lint": "tslint './src/**/*.ts' 2>&1 1>>logs/ts-error.log || echo 'error: tslint, see logs/ts-error.log for more infomations'",
+    "ts:compile": "echo '' > logs/ts-error.log && tsc 1>>logs/ts-error.log || echo 'error: ts-compile, see logs/ts-error.log for more informations'",
+    "ts:lint": "tslint './src/**/*.ts' 2>&1 1>>logs/ts-lint-error.log || echo 'error: tslint, see logs/ts-lint-error.log for more infomations'",
     "ts:watch": "nodemon --watch ./src --ext ts --exec \"npm run ts:build-dev\""
   },
   "author": "Ralf Hannuschka",

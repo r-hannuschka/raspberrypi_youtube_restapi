@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ResponseInterface } from "../../../../api/http/ResponseInterface";
+import { ResponseInterface } from "../../../../libs/http/api";
 import { AbstractController } from "../AbstractController";
 
 export class List extends AbstractController
