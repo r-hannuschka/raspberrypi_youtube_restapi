@@ -8,6 +8,8 @@ import { Socket } from "./libs/socket/Socket";
 
 import errorHandler = require("errorhandler");
 
+import { config as configData } from  './etc/config';
+import { Config } from "rh-utils";
 import { VideoModule, YoutubeModule } from "./module";
 
 /**
@@ -47,7 +49,7 @@ export class Server {
 
     // configure application
     this.config();
-
+    Config.getInstance().import(configData);
     this.initializeModules();
   }
 

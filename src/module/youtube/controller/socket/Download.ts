@@ -1,5 +1,5 @@
 import { IChannel, ISocketController } from "../../../../libs/socket";
-import { DownloadManager, DownloadTask, TaskFactory } from "../../../../libs/download"
+import { DownloadManager, DownloadTask, TaskFactory } from "rh-download"
 import { DOWNLOAD_GROUP_NAME, IVideoFile, SOCKET_GROUP_NAME } from '../../api';
 
 export class DownloadController implements ISocketController {

@@ -1,6 +1,5 @@
 import * as Client from "mariasql";
-import { AppConfig } from "./AppConfig";
-import { Logger } from "./Log";
+import { Config, Log } from "rh-utils";
 
 export class Database {
 
@@ -8,15 +7,17 @@ export class Database {
 
     private connection;
 
-    private logProvider: Logger;
+    private logProvider: Log;
+
+    private configProvider: Config;
 
     constructor()
     {
         if ( Database.instance ) {
             throw new Error("use Database.getInstance()");
         }
-        this.logProvider = Logger.getInstance();
-        this.connect();
+        this.logProvider    = Log.getInstance();
+        this.configProvider = Config.getInstance();
     }
 
     public static getInstance(): Database {
@@ -24,6 +25,9 @@ export class Database {
     }
 
     public getConnection() {
+        if ( ! this.connection ) {
+            this.connect();
+        }
         return this.connection;
     }
 
@@ -36,9 +40,9 @@ export class Database {
      * @memberof Database
      */
     public query(query: string, args: any = {}): Promise<any[]> {
-
+        const connection = this.getConnection();
         const dbQuery: Promise<any[]> = new Promise( (resolve, reject) => {
-            this.connection.query(query, args, (err, rows: any[]) => {
+            connection.query(query, args, (err, rows: any[]) => {
                 if ( err ) {
                     reject(err);
                     return;
@@ -51,7 +55,7 @@ export class Database {
 
     private connect() {
 
-        const dbConfig = AppConfig.get('maria_db');
+        const dbConfig = this.configProvider.get('maria_db');
 
         try {
             this.connection = new Client({
@@ -64,13 +68,13 @@ export class Database {
             const logMessage = `
                 db connection error:
                 ${__filename}
-                username: ${dbConfig.username},
-                password: ${dbConfig.password},
-                host    : ${dbConfig.host},
-                database: ${dbConfig.database}`;
+                username: ${dbConfig['username']},
+                password: ${dbConfig['password']},
+                host    : ${dbConfig['host']},
+                database: ${dbConfig['database']}`;
 
             this.logProvider
-                .log(Logger.LOG_DEBUG, logMessage);
+                .log(Log.LOG_DEBUG, logMessage);
         }
     }
 

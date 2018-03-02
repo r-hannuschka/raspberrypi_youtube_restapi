@@ -1,9 +1,22 @@
 import * as path from "path";
+import { ILogConfig } from 'rh-utils';
+import { IDownloadConfig } from 'rh-download';
 
 const baseUrl = "http://localhost:8080";
-
 const mediaDir = path.join(__dirname, "../../media");
 const logDir   = path.join(__dirname, "../../logs");
+
+const logConfig: ILogConfig = {
+    directories: {
+        default: logDir
+    }
+}
+
+const downloadConfig: IDownloadConfig = {
+    youtube: {
+        destinationDirectory: mediaDir
+    }
+}
 
 export const config = {
     maria_db: {
@@ -12,25 +25,8 @@ export const config = {
         password: "qwertz",
         username: "ralf"
     },
-    paths: {
-        logs: {
-            debug: `${logDir}/debug.log`,
-            error: `${logDir}/error.log`,
-            root : logDir
-        },
-        media: {
-            base: mediaDir,
-            image: `${mediaDir}/image`,
-            video: `${mediaDir}/video`
-        }
-    },
-    videoPlayer: {
-        omx: {
-            output: "hdmi"
-        },
-        vlc: {
-        }
-    },
+    download: downloadConfig,
+    log: logConfig,
     web: {
         baseUrl,
         media: {

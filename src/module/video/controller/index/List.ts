@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import { ControllerInterface } from "../../../../libs/module/api/ControllerInterface";
-import { VideoRepository } from "../../model/repository/VideoRepository";
+import { FileRepository } from "../../../../libs/file/model/Repository";
 
 export class List implements ControllerInterface
 {
-    private repository: VideoRepository;
+    private repository: FileRepository;
 
     constructor() {
-        this.repository = VideoRepository.getInstance();
+        this.repository = FileRepository.getInstance();
     }
 
     public async execute(req: Request, res: Response)

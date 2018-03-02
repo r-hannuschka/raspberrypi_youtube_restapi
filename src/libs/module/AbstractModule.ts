@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
 import { ControllerInterface } from "./api";
-import { PubSub } from "../PubSub";
+import { PubSub } from "rh-utils";
 import { ISocketController, Socket } from "../socket";
 
 export abstract class AbstractModule {

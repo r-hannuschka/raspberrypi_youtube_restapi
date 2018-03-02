@@ -1,14 +1,14 @@
 import * as httpRequest from "request-promise-native";
 import { RequestInterface, ResponseInterface } from "./api";
 import { Response } from "./model/Response";
-import { Logger } from "../Log";
+import { Log } from "rh-utils";
 
 export class HttpProvider {
 
-    private logProvider: Logger;
+    private logProvider: Log;
 
     constructor() {
-        this.logProvider = Logger.getInstance();
+        this.logProvider = Log.getInstance();
     }
 
     /**
@@ -39,14 +39,9 @@ export class HttpProvider {
             ${JSON.stringify(requestOptions)}`
         .replace(/^\s*/gm, "");
 
-        this.logProvider
-            .log(Logger.LOG_DEBUG, logMessage)
-            .catch( (exception) => {
-                console.log(exception.message);
-            });
+        this.logProvider.log(logMessage, Log.LOG_DEBUG)
 
         let responseData: any
-
         try {
             responseData = await httpRequest(requestOptions);
             response = this.handleResponseData(responseData);
@@ -55,7 +50,6 @@ export class HttpProvider {
         }
 
         return response;
-        // return Promise.resolve(response);
     }
 
     /**
@@ -105,7 +99,7 @@ export class HttpProvider {
             // tslint:disable-next-line:no-switch-case-fall-through
             default:
                 this.logProvider.log(
-                    Logger.LOG_ERROR,
+                    Log.LOG_ERROR,
                     JSON.stringify(error)
                 );
         };
