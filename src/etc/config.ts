@@ -6,15 +6,15 @@ const baseUrl = "http://localhost:8080";
 const mediaDir = path.join(__dirname, "../../media");
 const logDir   = path.join(__dirname, "../../logs");
 
-const logConfig: ILogConfig = {
+const log = {
     directories: {
         default: logDir
     }
 }
 
-const downloadConfig: IDownloadConfig = {
+const download: IDownloadConfig = {
     youtube: {
-        destinationDirectory: mediaDir
+        destinationDirectory: `${mediaDir}/video`
     }
 }
 
@@ -25,8 +25,8 @@ export const config = {
         password: "qwertz",
         username: "ralf"
     },
-    download: downloadConfig,
-    log: logConfig,
+    download,
+    log,
     web: {
         baseUrl,
         media: {
