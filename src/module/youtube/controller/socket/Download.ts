@@ -6,8 +6,12 @@ import {
     IDownload,
     IFileData,
     TaskFactory,
-    IYoutubeFileData
+    IYoutubeFileData,
+    IDownloadData,
+    DOWNLOAD_STATE_CANCEL,
+    DOWNLOAD_STATE_ERROR
 } from "rh-download"
+import { ISubscription } from 'rh-utils';
 import { IChannel, ISocketController } from "../../../../libs/socket";
 import { SOCKET_GROUP_NAME } from '../../api';
 
@@ -29,9 +33,6 @@ export class DownloadController implements ISocketController {
      */
     private registerSubscriptions() 
     {
-
-        console.log ( DOWNLOAD_GROUP_YOUTUBE );
-
         this.downloadManager.subscribe( (task: IDownloadTask) => {
             const download: IDownload = task.getDownload();
 
@@ -79,7 +80,7 @@ export class DownloadController implements ISocketController {
         let downloads =  Array.from(
             this.downloadManager.getDownloads(SOCKET_GROUP_NAME));
 
-        return downloads.map( (task: IDownloadTask): any => {
+        return downloads.map( (task: IDownloadTask): IDownloadData => {
             return task.toJSON();
         });
     }
@@ -116,8 +117,22 @@ export class DownloadController implements ISocketController {
      * @memberof DownloadController
      */
     protected finishVideoDownloadAction(download: IDownload) {
-        // @todo create task for image
-        const raw: IFileData = download.getRaw();
-        console.log ( raw );
+
+        const raw: IYoutubeFileData = download.getRaw() as IYoutubeFileData;
+        const image: IFileData = { name: raw.name, type: 'image' };
+        const task = TaskFactory.createImageTask(image, raw.imageUri, `image_download_${raw.video_id}`);
+
+        const sub: ISubscription = task.subscribe( (data: IDownloadData) => {
+            switch ( data.state ) {
+                case DOWNLOAD_STATE_END:
+                    console.log('save image now');
+                case DOWNLOAD_STATE_CANCEL:
+                case DOWNLOAD_STATE_ERROR:
+                    sub.unsubscribe();
+                    break;
+            }
+        });
+
+        this.downloadManager.registerDownload(task);
     }
 }
