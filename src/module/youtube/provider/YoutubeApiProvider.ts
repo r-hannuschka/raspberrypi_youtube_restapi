@@ -1,13 +1,13 @@
-import { HttpProvider, Request, RequestInterface, ResponseInterface  } from "../../../libs/http";
+import { HttpProvider, Request, RequestInterface, ResponseInterface  } from "@app-core/http";
+import { Config } from "rh-utils";
 import { ConfigInterface } from "../api/ConfigInterface";
-import * as ModuleConfig from "../etc/config.json";
 
 export class YoutubeApiProvider extends HttpProvider {
-    private config: ConfigInterface;
+    private api: ConfigInterface;
 
     constructor() {
         super();
-        this.config = (ModuleConfig as any) as ConfigInterface;
+        this.api = Config.getInstance().get('api.youtube') as ConfigInterface;
     }
 
     /**
@@ -17,10 +17,11 @@ export class YoutubeApiProvider extends HttpProvider {
      * @returns {Promise<ResponseInterface>}
      * @memberof YoutubeApiProvider
      */
-    public async list(params: {[key: string]: any } = {}): Promise<ResponseInterface> {
+    public async list(params: {[key: string]: any } = {}): Promise<ResponseInterface> 
+    {
         const request = this.createRequest();
 
-        request.setPath(this.config.api.action.list);
+        request.setPath(this.api.action.list);
         request.addQueryParams(
             Object.assign(
                 {
@@ -45,7 +46,7 @@ export class YoutubeApiProvider extends HttpProvider {
      */
     public async search(params: { [key: string]: any }): Promise<ResponseInterface> {
         const request = this.createRequest();
-        request.setPath(this.config.api.action.search);
+        request.setPath(this.api.action.search);
         request.addQueryParams(
             Object.assign(
                 {
@@ -70,9 +71,9 @@ export class YoutubeApiProvider extends HttpProvider {
     private createRequest(): RequestInterface {
         const request: Request = new Request();
         request.setMethod("GET");
-        request.setHost(this.config.api.host);
-        request.setBasePath(this.config.api.basePath);
-        request.addQueryParam("key", this.config.api.key);
+        request.setHost(this.api.host);
+        request.setBasePath(this.api.basePath);
+        request.addQueryParam("key", this.api.key);
         return request;
     }
 }

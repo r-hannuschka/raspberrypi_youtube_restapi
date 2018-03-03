@@ -1,4 +1,4 @@
-import { IFile } from '../api/FileInterface';
+import { IFile } from './file/api/FileInterface';
 
 export class File implements IFile {
 

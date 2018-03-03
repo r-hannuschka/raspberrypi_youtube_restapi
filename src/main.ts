@@ -4,7 +4,7 @@ import * as express from "express";
 import * as logger from "morgan";
 import * as path from "path";
 import { SocketIO } from "socket.io";
-import { Socket } from "./libs/socket/Socket";
+import { Socket } from "@app-libs/socket";
 
 import errorHandler = require("errorhandler");
 

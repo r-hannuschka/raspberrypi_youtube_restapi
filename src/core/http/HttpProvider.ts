@@ -86,7 +86,7 @@ export class HttpProvider {
      * @returns {ResponseInterface}
      * @memberof HttpProvider
      */
-    protected handleError(
+    private handleError(
         error: any,
         request: RequestInterface,
         responseData: any
@@ -99,8 +99,8 @@ export class HttpProvider {
             // tslint:disable-next-line:no-switch-case-fall-through
             default:
                 this.logProvider.log(
+                    JSON.stringify(error),
                     Log.LOG_ERROR,
-                    JSON.stringify(error)
                 );
         };
         return response;
@@ -113,7 +113,7 @@ export class HttpProvider {
      * @returns {ResponseInterface}
      * @memberof HttpProvider
      */
-    protected handleResponseData(responseData: any): ResponseInterface {
+    private handleResponseData(responseData: any): ResponseInterface {
         const response = this.getResponse();
         response.setSuccess(true);
         response.setStatusCode(200);

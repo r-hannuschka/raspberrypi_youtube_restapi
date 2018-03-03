@@ -28,6 +28,17 @@ export const config = {
         password: "qwertz",
         username: "ralf"
     },
+    api: {
+        youtube: {
+            "host": "https://www.googleapis.com",
+            "key": "",
+            "basePath": "youtube/v3",
+            "action": {
+                "list": "videos",
+                "search": "search"
+            }
+        }
+    },
     download,
     log,
     web: {

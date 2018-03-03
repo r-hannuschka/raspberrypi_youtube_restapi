@@ -1,8 +1,8 @@
-import { AbstractModule } from "../../libs/module";
+import { Module } from "@app-core/module";
 import { List, Search, DownloadController } from "./controller";
 import { SOCKET_GROUP_NAME } from "./api";
 
-export class YoutubeModule extends AbstractModule
+export class YoutubeModule extends Module
 {
     /**
      * @static

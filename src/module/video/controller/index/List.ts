@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { ControllerInterface } from "../../../../libs/module/api/ControllerInterface";
-import { FileRepository } from "../../../../libs/file/model/Repository";
+import { ControllerInterface } from "@app-core/module";
+import { FileRepository } from "@app-core/model/file/Repository";
 
 export class List implements ControllerInterface
 {

@@ -1,3 +1,3 @@
 export * from './api';
-export * from './Channel';
+export * from './model/Channel';
 export * from './Socket';

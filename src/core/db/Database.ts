@@ -77,5 +77,4 @@ export class Database {
                 .log(Log.LOG_DEBUG, logMessage);
         }
     }
-
 }

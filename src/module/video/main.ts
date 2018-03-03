@@ -1,7 +1,7 @@
-import { AbstractModule } from "../../libs/module";
+import { Module } from "@app-core/module";
 import { List } from "./controller";
 
-export class VideoModule extends AbstractModule
+export class VideoModule extends Module
 {
     /**
      * @static

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ResponseInterface } from "../../../../libs/http/api";
+import { ResponseInterface } from "@app-core/http";
 import { AbstractController } from "../AbstractController";
 
 export class List extends AbstractController
@@ -8,6 +8,7 @@ export class List extends AbstractController
     {
         const apiResponse: ResponseInterface = await this.getApi().list(req.query);
         const responseData: any = apiResponse.json();
+
         res.status(responseData.status);
         res.json({
             data: responseData.data,

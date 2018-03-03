@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ControllerInterface } from "../../../libs/module";
+import { ControllerInterface } from "@app-core/module";
 import { YoutubeApiProvider } from "../provider/YoutubeApiProvider";
 
 export abstract class AbstractController implements ControllerInterface

@@ -1,19 +1,16 @@
 import { 
     DownloadManager,
-    DOWNLOAD_STATE_END,
     DOWNLOAD_GROUP_YOUTUBE,
+    DOWNLOAD_STATE_END,
     IDownloadTask,
     IDownload,
-    IFileData,
     TaskFactory,
     IYoutubeFileData,
-    IDownloadData,
-    DOWNLOAD_STATE_CANCEL,
-    DOWNLOAD_STATE_ERROR
+    IDownloadData
 } from "rh-download"
-import { ISubscription } from 'rh-utils';
-import { IChannel, ISocketController } from "../../../../libs/socket";
+import { IChannel, ISocketController } from "@app-libs/socket";
 import { SOCKET_GROUP_NAME } from '../../api';
+// import { saveVideoAction } from '../../actions/save-video-action';
 
 export class DownloadController implements ISocketController {
 
@@ -35,9 +32,8 @@ export class DownloadController implements ISocketController {
     {
         this.downloadManager.subscribe( (task: IDownloadTask) => {
             const download: IDownload = task.getDownload();
-
             if ( download.getState() === DOWNLOAD_STATE_END ) {
-                this.finishVideoDownloadAction( download );
+                // saveVideoAction( download.getRaw() as IYoutubeFileData );
             }
             this.socketChannel.emit(`download_provider.download${download.getState()}`, task.toJSON());
         }, DOWNLOAD_GROUP_YOUTUBE);
@@ -107,32 +103,5 @@ export class DownloadController implements ISocketController {
     protected cancelAction (id: string) {
         const task: IDownloadTask = this.downloadManager.findTaskById(id);
         this.downloadManager.cancelDownload(task);
-    }
-
-    /**
-     * finish video download, download video image and persist all data
-     * 
-     * @protected
-     * @param {IDownload} download 
-     * @memberof DownloadController
-     */
-    protected finishVideoDownloadAction(download: IDownload) {
-
-        const raw: IYoutubeFileData = download.getRaw() as IYoutubeFileData;
-        const image: IFileData = { name: raw.name, type: 'image' };
-        const task = TaskFactory.createImageTask(image, raw.imageUri, `image_download_${raw.video_id}`);
-
-        const sub: ISubscription = task.subscribe( (data: IDownloadData) => {
-            switch ( data.state ) {
-                case DOWNLOAD_STATE_END:
-                    console.log('save image now');
-                case DOWNLOAD_STATE_CANCEL:
-                case DOWNLOAD_STATE_ERROR:
-                    sub.unsubscribe();
-                    break;
-            }
-        });
-
-        this.downloadManager.registerDownload(task);
     }
 }

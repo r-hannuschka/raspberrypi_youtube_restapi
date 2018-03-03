@@ -1,5 +1,5 @@
-import { IFile } from "../api/FileInterface";
-import { Database } from "../../../libs/Database";
+import { IFile } from "./api/FileInterface";
+import { Database } from "@app-core";
 
 export class FileRepository {
 
@@ -50,16 +50,10 @@ export class FileRepository {
      */
     public async list(start: number = 0, limit: number = 20): Promise<IFile[]>
     {
-        const total: number = await this.getTotal();
-
         let rows: IFile[] = [];
         rows = await this.dbProvider.query(
             `SELECT * FROM ${this.table} LIMIT ${start},${limit}`
         );
-
-        // das noch umwandel muss in model daten ...
-        // es kann sein das es sich hierbei um ein Video handelt mit einen Image
-        // dann muss ich noch das Bild filzen 
 
         return rows;
     }

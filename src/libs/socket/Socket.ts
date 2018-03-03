@@ -1,6 +1,6 @@
 import * as SocketIO from "socket.io";
 import { IChannel } from "./api";
-import { Channel } from "./Channel";
+import { Channel } from "./model/Channel";
 
 export class Socket
 {

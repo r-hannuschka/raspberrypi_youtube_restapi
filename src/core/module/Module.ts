@@ -1,9 +1,9 @@
 import { Request, Response, Router } from "express";
 import { ControllerInterface } from "./api";
 import { PubSub } from "rh-utils";
-import { ISocketController, Socket } from "../socket";
+import { ISocketController, Socket } from "@app-libs/socket";
 
-export abstract class AbstractModule {
+export abstract class Module {
     /**
      * @private
      * @type {Router}
@@ -72,10 +72,14 @@ export abstract class AbstractModule {
      * @param {ISocketController} controller
      */
     protected registerSocketController(channel: string, controller: ISocketController) {
-        const socket = Socket.getInstance();
-        const socketChannel = socket.createChannel(channel);
-        socketChannel.setEndpoint(controller);
-        controller.setChannel(socketChannel);
+        try {
+            const socket = Socket.getInstance();
+            const socketChannel = socket.createChannel(channel);
+            socketChannel.setEndpoint(controller);
+            controller.setChannel(socketChannel);
+        } catch ( error ) {
+            console.dir( Socket );
+        }
     }
 
     /**
@@ -87,12 +91,14 @@ export abstract class AbstractModule {
         this.configureRouter();
     }
 
+
     /**
-     *
-     * @private
-     * @param {Request} req
-     * @param {Response} res
-     * @memberof AbstractController
+     * 
+     * 
+     * @protected
+     * @param {Request} req 
+     * @param {Response} res 
+     * @memberof Module
      */
     protected processRequest(req: Request, res: Response) {
 
