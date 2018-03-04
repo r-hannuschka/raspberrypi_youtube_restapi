@@ -39,7 +39,7 @@ export class Database {
      * @returns {Promise<any[]>} resolved rows
      * @memberof Database
      */
-    public query(query: string, args: any = {}): Promise<any[]> {
+    public async query(query: string, args: any = {}): Promise<any[]> {
         const connection = this.getConnection();
         const dbQuery: Promise<any[]> = new Promise( (resolve, reject) => {
             connection.query(query, args, (err, rows: any[]) => {

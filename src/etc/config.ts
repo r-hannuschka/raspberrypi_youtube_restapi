@@ -31,7 +31,7 @@ export const config = {
     api: {
         youtube: {
             "host": "https://www.googleapis.com",
-            "key": "",
+            "key": "AIzaSyBxxX4ZTx6HT_AIjwUTDnoAu7fqDw-Y6V0",
             "basePath": "youtube/v3",
             "action": {
                 "list": "videos",

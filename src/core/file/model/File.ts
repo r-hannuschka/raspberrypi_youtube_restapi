@@ -1,4 +1,4 @@
-import { IFile } from './file/api/FileInterface';
+import { IFile, IFileData } from '../api';
 
 export class File implements IFile {
 
@@ -12,7 +12,9 @@ export class File implements IFile {
 
     private type: string;
 
-    private previewImage: string;
+    private image: string;
+
+    private name: string;
 
     public setDescription(desc: string): void {
         this.description = desc;
@@ -26,6 +28,10 @@ export class File implements IFile {
         this.id = id;
     }
 
+    public setName(name: string): void {
+        this.name = name;
+    }
+
     public setTitle(title: string): void {
         this.title = title;
     }
@@ -36,8 +42,8 @@ export class File implements IFile {
      * @param {string} image pathlike
      * @memberof File
      */
-    public setPreviewImage(image: string) {
-        this.previewImage = image;
+    public setImage(image: string) {
+        this.image = image;
     }
 
     public setType(type: string): void {
@@ -56,9 +62,13 @@ export class File implements IFile {
         return this.id;
     }
 
-    public getPreviewImage(): string 
+    public getName(): string {
+        return this.name;
+    }
+
+    public getImage(): string 
     {
-        return this.previewImage;
+        return this.image;
     }
 
     public getTitle(): string {
@@ -67,5 +77,21 @@ export class File implements IFile {
 
     public getType(): string {
         return this.type;
+    }
+
+    public raw(): IFileData {
+        return {
+            description: this.getDescription(),
+
+            file: this.getFile(),
+
+            id: this.getId(),
+
+            image: this.getImage(),
+
+            name: this.getName(),
+
+            type: this.getType()
+        }
     }
 }

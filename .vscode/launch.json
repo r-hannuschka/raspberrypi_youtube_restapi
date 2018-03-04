@@ -7,14 +7,9 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "launch server",
-            "cwd": "${workspaceFolder}/",
-            "program": "${workspaceFolder}/bin/run",
-            "outFiles": [
-                "${workspaceFolder}/dist/**/*.js"
-            ],
-            "console": "internalConsole",
-            "sourceMaps": true
+            "address": "localhost",
+            "name": "Attach",
+            "port": 8080
         }
     ]
 }

@@ -8,9 +8,9 @@ import {
     IYoutubeFileData,
     IDownloadData
 } from "rh-download"
+import { FileManager, IFileData } from "@app-core/file";
 import { IChannel, ISocketController } from "@app-libs/socket";
 import { SOCKET_GROUP_NAME } from '../../api';
-// import { saveVideoAction } from '../../actions/save-video-action';
 
 export class DownloadController implements ISocketController {
 
@@ -18,8 +18,13 @@ export class DownloadController implements ISocketController {
 
     private downloadManager: DownloadManager;
 
+    private fileManager: FileManager;
+
     public constructor() {
+
         this.downloadManager = DownloadManager.getInstance();
+        this.fileManager     = FileManager.getInstance();
+
         this.registerSubscriptions();
     }
 
@@ -31,9 +36,21 @@ export class DownloadController implements ISocketController {
     private registerSubscriptions() 
     {
         this.downloadManager.subscribe( (task: IDownloadTask) => {
+
             const download: IDownload = task.getDownload();
+            const raw: IYoutubeFileData = download.getRaw() as IYoutubeFileData;
             if ( download.getState() === DOWNLOAD_STATE_END ) {
-                // saveVideoAction( download.getRaw() as IYoutubeFileData );
+
+                const fileData: IFileData = {
+                    name: download.getName(),
+                    file : `${download.getDestination()}/${download.getFileName()}`,
+                    description: raw.description,
+                    type: raw.type,
+                    image: raw.imageUri
+                };
+
+                this.fileManager.add(
+                    this.fileManager.createFile(fileData));
             }
             this.socketChannel.emit(`download_provider.download${download.getState()}`, task.toJSON());
         }, DOWNLOAD_GROUP_YOUTUBE);

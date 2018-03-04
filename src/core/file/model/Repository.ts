@@ -1,5 +1,5 @@
-import { IFile } from "./api/FileInterface";
 import { Database } from "@app-core";
+import { IFile, IFileData } from '../api';
 
 export class FileRepository {
 
@@ -48,9 +48,9 @@ export class FileRepository {
      * @returns {Promise<IFile[]>}
      * @memberof FileRepository
      */
-    public async list(start: number = 0, limit: number = 20): Promise<IFile[]>
+    public async list(start: number = 0, limit: number = 20): Promise<IFileData[]>
     {
-        let rows: IFile[] = [];
+        let rows: any[] = [];
         rows = await this.dbProvider.query(
             `SELECT * FROM ${this.table} LIMIT ${start},${limit}`
         );
@@ -65,15 +65,16 @@ export class FileRepository {
      * @returns
      * @memberof FileRepository
      */
-    public insert(file: IFile): Promise<any>
+    public async add(file: IFile): Promise<any>
     {
         const query = `
             INSERT INTO ${this.table}
-            (name, description,image, filename, path, type)
-            VALUES(:name,:description,:image,:fileName,:path,:type)
+            (name, description, image, filename, type)
+            VALUES(
+                :name, :description, :image, :file, :type)
         `;
 
-        return this.dbProvider.query( query, file)
+        return this.dbProvider.query( query, file.raw());
     }
 
     /**
@@ -83,7 +84,7 @@ export class FileRepository {
      * @param {({[key: string]: string | number})} fields
      * @memberof FileRepository
      */
-    public update(file: IFile, fields: {[key: string]: string | number})
+    public update(file: IFileData, fields: {[key: string]: string | number})
     {
         const data: string[] = [];
         Object.keys(fields).forEach( (col) => {
@@ -94,7 +95,7 @@ export class FileRepository {
         const query = `
             UPDATE ${this.table}
             SET ${data.join(",")}
-            WHERE video_id=${file.getId()}`;
+            WHERE video_id=${file.id}`;
 
         return this.dbProvider.query(query);
     }
