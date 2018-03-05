@@ -25,13 +25,13 @@ export const config = {
     maria_db: {
         database: "raspberry_youtube",
         host: "127.0.0.1",
-        password: "qwertz",
-        username: "ralf"
+        password: "PASSWORD_MARIA_DB",
+        username: "USERNAME_MARIA_DB"
     },
     api: {
         youtube: {
             "host": "https://www.googleapis.com",
-            "key": "AIzaSyBxxX4ZTx6HT_AIjwUTDnoAu7fqDw-Y6V0",
+            "key": "YOUTUBE_API_KEY",
             "basePath": "youtube/v3",
             "action": {
                 "list": "videos",
