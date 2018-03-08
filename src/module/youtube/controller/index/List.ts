@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
 import { ResponseInterface } from "@app-core/http";
+import { Request, Response } from "express";
 import { AbstractController } from "../AbstractController";
 
 export class List extends AbstractController

@@ -1,4 +1,4 @@
-import { IFile, IFileData } from '../api';
+import { IFile, IFileData } from "../api";
 
 export class File implements IFile {
 
@@ -37,8 +37,8 @@ export class File implements IFile {
     }
 
     /**
-     * 
-     * 
+     *
+     *
      * @param {string} image pathlike
      * @memberof File
      */
@@ -66,7 +66,7 @@ export class File implements IFile {
         return this.name;
     }
 
-    public getImage(): string 
+    public getImage(): string
     {
         return this.image;
     }

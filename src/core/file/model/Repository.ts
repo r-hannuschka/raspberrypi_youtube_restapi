@@ -1,5 +1,5 @@
 import { Database } from "@app-core";
-import { IFile, IFileData } from '../api';
+import { IFile, IFileData } from "../api";
 
 export class FileRepository {
 
@@ -17,9 +17,9 @@ export class FileRepository {
     }
 
     /**
-     * 
-     * 
-     * @returns {Promise<number>} 
+     *
+     *
+     * @returns {Promise<number>}
      * @memberof FileRepository
      */
     public async getTotal(): Promise<number> {
@@ -30,10 +30,10 @@ export class FileRepository {
     }
 
     /**
-     * 
-     * 
+     *
+     *
      * @static
-     * @returns 
+     * @returns
      * @memberof FileRepository
      */
     public static getInstance() {

@@ -1,6 +1,6 @@
 import { spawn, ChildProcess } from "child_process";
 
-export class OmxPlayer 
+export class OmxPlayer
 {
     private omx: ChildProcess;
 

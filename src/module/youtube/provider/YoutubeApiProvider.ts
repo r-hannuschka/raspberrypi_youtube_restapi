@@ -17,7 +17,7 @@ export class YoutubeApiProvider extends HttpProvider {
      * @returns {Promise<ResponseInterface>}
      * @memberof YoutubeApiProvider
      */
-    public async list(params: {[key: string]: any } = {}): Promise<ResponseInterface> 
+    public async list(params: {[key: string]: any } = {}): Promise<ResponseInterface>
     {
         const request = this.createRequest();
 

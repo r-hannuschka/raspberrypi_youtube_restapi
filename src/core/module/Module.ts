@@ -57,8 +57,8 @@ export abstract class Module {
      * register to publish subscribe to get notified on events
      *
      * @protected
-     * @param {string} event 
-     * @param {any} handler 
+     * @param {string} event
+     * @param {any} handler
      * @memberof AbstractModule
      */
     protected registerEvent(event: string, handler) {
@@ -93,11 +93,11 @@ export abstract class Module {
 
 
     /**
-     * 
-     * 
+     *
+     *
      * @protected
-     * @param {Request} req 
-     * @param {Response} res 
+     * @param {Request} req
+     * @param {Response} res
      * @memberof Module
      */
     protected processRequest(req: Request, res: Response) {

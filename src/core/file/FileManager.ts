@@ -1,7 +1,7 @@
-import { IDownloadData, downloadImageFile } from 'rh-download';
-import { Validator } from 'rh-utils';
-import { IFile, IFileData, FILE_TYPE_VIDEO } from './api';
-import { File, FileRepository } from './model';
+import { downloadImageFile, IDownloadData } from "rh-download";
+import { Validator } from "rh-utils";
+import { FILE_TYPE_VIDEO, IFile, IFileData,  } from "./api";
+import { File, FileRepository } from "./model";
 
 export class FileManager
 {
@@ -11,7 +11,7 @@ export class FileManager
 
     private constructor() {
         if ( FileManager.instance ) {
-            throw new Error('use Filemanager:getInstance() instead.');
+            throw new Error("use Filemanager:getInstance() instead.");
         }
         this.repository = FileRepository.getInstance();
     }
@@ -21,13 +21,12 @@ export class FileManager
     }
 
     /**
-     * 
-     * 
-     * @param {IFileData} data 
-     * @returns {IFile} 
+     *
+     * @param {IFileData} data
+     * @returns {IFile}
      * @memberof FileManager
      */
-    public createFile(data: IFileData) : IFile
+    public createFile(data: IFileData): IFile
     {
         const file: File = new File();
 
@@ -44,9 +43,9 @@ export class FileManager
      * add new file to repository
      * check if file has an video, validate image url
      * and download image if possible.
-     * 
-     * @param {IFile} file 
-     * @returns {IFile} 
+     *
+     * @param {IFile} file
+     * @returns {IFile}
      * @memberof FileManager
      */
     public async add(file: File): Promise<IFile>
@@ -60,7 +59,7 @@ export class FileManager
                     return downloadImageFile(file.getName(), file.getImage());
                 })
                 .then( (data: IDownloadData) => {
-                    console.log("update this shit");
+                    // @todo implement
                 })
                 .catch( (err) => {
                     console.log ( err );
@@ -69,7 +68,7 @@ export class FileManager
         return file;
     }
 
-    public async update(file: IFileData, data): Promise<IFileData> 
+    public async update(file: IFileData, data): Promise<IFileData>
     {
         // @todo implement
         return Promise.resolve(file);
@@ -77,5 +76,6 @@ export class FileManager
 
     public delete(file: IFile)
     {
+        // not empty
     }
 }
