@@ -1,7 +1,6 @@
-import { downloadImageFile, IDownloadData } from "rh-download";
-import { Validator } from "rh-utils";
-import { FILE_TYPE_VIDEO, IFile, IFileData,  } from "./api";
-import { File, FileRepository } from "./model";
+import { IFile, IFileData, IVideoFile,  } from "./api";
+import { VideoFile } from "./model";
+import { FileRepository } from "./model";
 
 export class FileManager
 {
@@ -22,50 +21,18 @@ export class FileManager
 
     /**
      *
-     * @param {IFileData} data
-     * @returns {IFile}
-     * @memberof FileManager
-     */
-    public createFile(data: IFileData): IFile
-    {
-        const file: File = new File();
-
-        file.setDescription(data.description);
-        file.setFile(data.file);
-        file.setImage(data.image);
-        file.setName(data.name);
-        file.setType(data.type);
-
-        return file;
-    }
-
-    /**
-     * add new file to repository
-     * check if file has an video, validate image url
-     * and download image if possible.
      *
-     * @param {IFile} file
-     * @returns {IFile}
+     * @param {(IFile | IVideoFile)} file
+     * @returns {Promise<IFile>}
      * @memberof FileManager
      */
-    public async add(file: File): Promise<IFile>
+    public async add(file: IFile | IVideoFile): Promise<any>
     {
-        const added = await this.repository.add(file);
-        file.setId(added.info.insertId);
-
-        if ( file.getType() === FILE_TYPE_VIDEO ) {
-            Validator.urlExists(file.getImage())
-                .then( () => {
-                    return downloadImageFile(file.getName(), file.getImage());
-                })
-                .then( (data: IDownloadData) => {
-                    // @todo implement
-                })
-                .catch( (err) => {
-                    console.log ( err );
-                });
+        if (file instanceof VideoFile) {
+            return this.repository.addVideo(file as IVideoFile);
         }
-        return file;
+
+        return this.repository.addFile(file as IFile);
     }
 
     public async update(file: IFileData, data): Promise<IFileData>
@@ -76,6 +43,6 @@ export class FileManager
 
     public delete(file: IFile)
     {
-        // not empty
+        // @todo implement
     }
 }

@@ -1,15 +1,16 @@
-import { FileManager, IFileData } from "@app-core/file";
 import { IChannel, ISocketController } from "@app-libs/socket";
 import {
     DOWNLOAD_GROUP_YOUTUBE,
     DOWNLOAD_STATE_END,
     DownloadManager,
-    IDownload,
-    IDownloadData,
-    IDownloadTask,
-    IYoutubeFileData,
+    ITask,
+    ITaskData,
+    IYoutubeData,
+    IYoutubeFile,
     TaskFactory,
+    YoutubeTaskFactory
 } from "rh-download"
+import { saveYoutubeVideo } from "../../actions/save-youtube-video";
 import { SOCKET_GROUP_NAME } from "../../api";
 
 export class DownloadController implements ISocketController {
@@ -18,13 +19,8 @@ export class DownloadController implements ISocketController {
 
     private downloadManager: DownloadManager;
 
-    private fileManager: FileManager;
-
     public constructor() {
-
         this.downloadManager = DownloadManager.getInstance();
-        this.fileManager = FileManager.getInstance();
-
         this.registerSubscriptions();
     }
 
@@ -63,10 +59,10 @@ export class DownloadController implements ISocketController {
     public onConnected() {
 
         const downloads = Array.from(
-            this.downloadManager.getDownloads(SOCKET_GROUP_NAME));
+            this.downloadManager.getTasks(SOCKET_GROUP_NAME));
 
-        return downloads.map((task: IDownloadTask): IDownloadData => {
-            return task.toJSON();
+        return downloads.map((task: ITask): ITaskData => {
+            return task.raw();
         });
     }
 
@@ -77,8 +73,10 @@ export class DownloadController implements ISocketController {
      * @param {IVideoFile} file
      * @memberof DownloadController
      */
-    protected downloadAction(file: IYoutubeFileData) {
-        const task = TaskFactory.createYoutubeTask(file, DOWNLOAD_GROUP_YOUTUBE);
+    protected downloadAction(data: IYoutubeData) {
+        const factory: YoutubeTaskFactory = TaskFactory.getYoutubeTaskFactory();
+        const task: ITask = factory.createTask(data, DOWNLOAD_GROUP_YOUTUBE);
+
         this.downloadManager.registerDownload(task);
     }
 
@@ -90,7 +88,7 @@ export class DownloadController implements ISocketController {
      * @memberof DownloadController
      */
     protected cancelAction(id: string) {
-        const task: IDownloadTask = this.downloadManager.findTaskById(id);
+        const task: ITask = this.downloadManager.findTaskById(id);
         this.downloadManager.cancelDownload(task);
     }
 
@@ -101,25 +99,16 @@ export class DownloadController implements ISocketController {
      */
     private registerSubscriptions() {
         this.downloadManager.subscribe(
-            (task: IDownloadTask) => {
+            async (task: ITask) => {
 
-                const download: IDownload = task.getDownload();
-                const raw: IYoutubeFileData = download.getRaw() as IYoutubeFileData;
+                const file: IYoutubeFile = task.getFile() as IYoutubeFile;
 
-                if (download.getState() === DOWNLOAD_STATE_END) {
-                    const fileData: IFileData = {
-                        description: raw.description,
-                        file: `${download.getDestination()}/${download.getFileName()}`,
-                        image: raw.imageUri,
-                        name: download.getName(),
-                        type: raw.type
-                    };
-                    this.fileManager.add(
-                        this.fileManager.createFile(fileData));
+                if (task.getState() === DOWNLOAD_STATE_END) {
+                    saveYoutubeVideo(file);
                 }
 
                 this.socketChannel
-                    .emit(`download_provider.download${download.getState()}`, task.toJSON());
+                    .emit(`download_provider.download${task.getState()}`, file.raw());
 
             },
             DOWNLOAD_GROUP_YOUTUBE

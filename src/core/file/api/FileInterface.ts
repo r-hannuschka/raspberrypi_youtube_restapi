@@ -1,8 +1,6 @@
-import { IFileData } from "rh-download";
+import { IFileData } from "./FileDataInterface";
 
 export interface IFile {
-
-    getDescription(): string;
 
     getFile(): string;
 
@@ -10,11 +8,7 @@ export interface IFile {
 
     getName(): string;
 
-    getTitle(): string;
-
-    getType(): string;
-
-    getImage(): string;
+    getPath(): string;
 
     raw(): IFileData
 }

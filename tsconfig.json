@@ -10,7 +10,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": false, 
     "moduleResolution": "node",
-    "sourceMap": true,
+    "sourceMap": false,
     "typeRoots": [
       "./node_modules/@types",
       "./typings/@app-core",

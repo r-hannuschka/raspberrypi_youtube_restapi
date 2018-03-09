@@ -1,15 +1,15 @@
+import { Socket } from "@app-libs/socket";
 import * as bodyParser from "body-parser";
 import * as cookieParser from "cookie-parser";
 import * as express from "express";
 import * as logger from "morgan";
 import * as path from "path";
 import { SocketIO } from "socket.io";
-import { Socket } from "@app-libs/socket";
 
 import errorHandler = require("errorhandler");
 
-import { config as configData } from  './etc/config';
 import { Config } from "rh-utils";
+import { config as configData } from "./etc/config";
 import { VideoModule, YoutubeModule } from "./module";
 
 /**

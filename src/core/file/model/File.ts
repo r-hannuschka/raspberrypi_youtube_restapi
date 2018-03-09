@@ -4,21 +4,11 @@ export class File implements IFile {
 
     private id: number;
 
-    private description: string;
-
     private file: string;
-
-    private title: string;
-
-    private type: string;
-
-    private image: string;
 
     private name: string;
 
-    public setDescription(desc: string): void {
-        this.description = desc;
-    }
+    private path: string;
 
     public setFile(name: string): void {
         this.file = name;
@@ -32,26 +22,8 @@ export class File implements IFile {
         this.name = name;
     }
 
-    public setTitle(title: string): void {
-        this.title = title;
-    }
-
-    /**
-     *
-     *
-     * @param {string} image pathlike
-     * @memberof File
-     */
-    public setImage(image: string) {
-        this.image = image;
-    }
-
-    public setType(type: string): void {
-        this.type = type;
-    }
-
-    public getDescription(): string {
-        return this.description;
+    public setPath(path: string): void {
+        this.path = path;
     }
 
     public getFile(): string {
@@ -66,32 +38,19 @@ export class File implements IFile {
         return this.name;
     }
 
-    public getImage(): string
-    {
-        return this.image;
-    }
-
-    public getTitle(): string {
-        return this.title;
-    }
-
-    public getType(): string {
-        return this.type;
+    public getPath(): string {
+        return this.path;
     }
 
     public raw(): IFileData {
         return {
-            description: this.getDescription(),
-
             file: this.getFile(),
 
             id: this.getId(),
 
-            image: this.getImage(),
-
             name: this.getName(),
 
-            type: this.getType()
+            path: this.getPath()
         }
     }
 }

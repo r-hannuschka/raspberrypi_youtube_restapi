@@ -1,5 +1,5 @@
 import { Database } from "@app-core";
-import { IFile, IFileData } from "../api";
+import { IFile, IVideoFile } from "../api";
 
 export class FileRepository {
 
@@ -7,26 +7,13 @@ export class FileRepository {
 
     private dbProvider: Database;
 
-    private table: string = "video";
+    private TABLE_VIDEO = "video";
 
     constructor() {
         if ( FileRepository.instance ) {
             throw new Error("use Database.getInstance()");
         }
         this.dbProvider = Database.getInstance();
-    }
-
-    /**
-     *
-     *
-     * @returns {Promise<number>}
-     * @memberof FileRepository
-     */
-    public async getTotal(): Promise<number> {
-        const rows = await this.dbProvider.query(
-            `SELECT COUNT(video_id) as total FROM ${this.table}`,
-        );
-        return rows[0].total;
     }
 
     /**
@@ -43,19 +30,37 @@ export class FileRepository {
     /**
      *
      *
+     * @returns {Promise<number>}
+     * @memberof FileRepository
+     */
+    public async getTotal()
+    {
+        /*
+        const rows = await this.dbProvider.query(
+            `SELECT COUNT(video_id) as total FROM ${this.table}`,
+        );
+        return rows[0].total;
+        */
+    }
+
+    /**
+     *
+     *
      * @param {number} [start=0]
      * @param {number} [limit=20]
      * @returns {Promise<IFile[]>}
      * @memberof FileRepository
      */
-    public async list(start: number = 0, limit: number = 20): Promise<IFileData[]>
+    public async list(start: number = 0, limit: number = 20) // : Promise<IFileData[]>
     {
+        /*
         let rows: any[] = [];
         rows = await this.dbProvider.query(
             `SELECT * FROM ${this.table} LIMIT ${start},${limit}`
         );
 
         return rows;
+        */
     }
 
     /**
@@ -65,11 +70,11 @@ export class FileRepository {
      * @returns
      * @memberof FileRepository
      */
-    public async add(file: IFile): Promise<any>
+    public async addFile(file: IFile): Promise<any>
     {
         const query = `
-            INSERT INTO ${this.table}
-            (name, description, image, filename, type)
+            INSERT INTO ${this.TABLE_VIDEO}
+            (name, description, image, file, type)
             VALUES(
                 :name, :description, :image, :file, :type)
         `;
@@ -77,26 +82,44 @@ export class FileRepository {
         return this.dbProvider.query( query, file.raw());
     }
 
+    public async addVideo(video: IVideoFile): Promise<any>
+    {
+        const query = `
+            INSERT INTO ${this.TABLE_VIDEO}
+            (name, description, image, file, path)
+            VALUES(
+                :name, :description, :image, :file, :type: )
+        `;
+
+        return this.dbProvider.query( query, video.raw());
+    }
+
     /**
      *
      *
-     * @param {IVideoFile} file
-     * @param {({[key: string]: string | number})} fields
+     * @protected
+     * @param {IFile} file
+     * @returns {Promise<any>}
      * @memberof FileRepository
      */
-    public update(file: IFileData, fields: {[key: string]: string | number})
+    protected async update(file: IFile): Promise<any>
     {
-        const data: string[] = [];
-        Object.keys(fields).forEach( (col) => {
-            const value = this.dbProvider.getConnection().escape(fields[col]);
-            data.push(`${col}='${value}'`)
+        /*
+        const raw: IDataNode = file.raw();
+        let data: string = "";
+
+        Object.keys(raw).forEach( (col) => {
+            const value = this.dbProvider.getConnection().escape(raw[col]);
+            data += data.length ? "," : "";
+            data += `${col}='${value}'`;
         });
 
         const query = `
             UPDATE ${this.table}
-            SET ${data.join(",")}
-            WHERE video_id=${file.id}`;
+            SET ${data}
+            WHERE video_id=${file.getId()}`;
 
         return this.dbProvider.query(query);
+        */
     }
 }

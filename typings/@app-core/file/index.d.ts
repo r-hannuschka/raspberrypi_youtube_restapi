@@ -1,55 +1,38 @@
-declare module '@app-core/file' {
-
-    interface IFile 
-    {
-
-        getDescription(): string;
-
-        getFile(): string;
-
-        getId(): number;
-
-        getTitle(): string;
-
-        getType(): string;
-
-        getPreviewImage(): string;
-    }
+declare module "@app-core/file" {
 
     interface IFileData 
     {
         description?: string;
-
         file: string;
-
         id?: number;
-
         image?: string;
-
         name: string;
-
         type: string;
     }
 
     class FileManager
     {
         public static getInstance(): FileManager;
+        public add(file: File): Promise<any>;
+        public update(file: File, data): Promise<File>;
+        public delete(file: File);
+    }
 
-        public createFile(data: IFileData) : IFile;
+    class File {
+        getFile(): string
+        getId(): number;
+        getName(): string;
+        getPath(): string;
+        setFile(f: string);
+        setId(id: number): number;
+        setName(name: string);
+        setPath(path: string);
+    }
 
-        /**
-         * add new file to repository
-         * check if file has an video, validate image url
-         * and download image if possible.
-         * 
-         * @param {IFile} file 
-         * @returns {IFile} 
-         * @memberof FileManager
-         */
-        public add(file: IFile): Promise<IFile>;
-
-        public update(file: IFile, data): Promise<IFile>;
-
-        public delete(file: IFile);
+    class VideoFile extends File {
+        setDescription(desc: string);
+        setImage(image: File | string);
+        getDescription(): string;
+        getImage(): File
     }
 }
