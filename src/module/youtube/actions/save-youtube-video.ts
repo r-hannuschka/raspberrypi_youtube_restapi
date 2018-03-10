@@ -1,9 +1,11 @@
 import { File, FileManager, VideoFile } from "@app-core/file";
 import { downloadImageFile, ITaskData, IYoutubeFile } from "rh-download";
+import { Log } from "rh-utils";
 
 export function saveYoutubeVideo(youtubeFile: IYoutubeFile)
 {
     const fileService = FileManager.getInstance();
+    const logService  = Log.getInstance();
 
     // create video file
     const videoFile: VideoFile = new VideoFile();
@@ -12,13 +14,15 @@ export function saveYoutubeVideo(youtubeFile: IYoutubeFile)
     videoFile.setName( youtubeFile.getName() );
     videoFile.setPath( youtubeFile.getDestination() );
 
-    fileService.add(videoFile);
-
-    if ( ! youtubeFile.getImage() ) {
-        return;
-    }
-
-    downloadImageFile(youtubeFile.getName(), youtubeFile.getImage())
+    fileService.add(videoFile)
+        .then( (): Promise<ITaskData> => {
+            if ( ! youtubeFile.getImage() ) {
+                // set default image and resolve this shit
+                // so we allways update this
+                return Promise.reject("no image code");
+            }
+            return downloadImageFile(youtubeFile.getName(), youtubeFile.getImage());
+        })
         .then( (data: ITaskData) => {
             const image = new File();
             image.setFile(data.file.fileName);
@@ -27,10 +31,12 @@ export function saveYoutubeVideo(youtubeFile: IYoutubeFile)
 
             return fileService.add(image);
         })
-        .then( (info: any) => {
-            console.dir( info );
+        .then ( (info: any) => {
+            // @todo update file
         })
-        .catch( () => {
-            // do something
+        .catch ( (error) => {
+            if ( error instanceof Error ) {
+                logService.log(error.message, Log.LOG_ERROR);
+            }
         });
 }

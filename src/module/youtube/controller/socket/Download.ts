@@ -77,6 +77,7 @@ export class DownloadController implements ISocketController {
         const factory: YoutubeTaskFactory = TaskFactory.getYoutubeTaskFactory();
         const task: ITask = factory.createTask(data, DOWNLOAD_GROUP_YOUTUBE);
 
+        console.log ( task.raw() );
         this.downloadManager.registerDownload(task);
     }
 
@@ -108,7 +109,7 @@ export class DownloadController implements ISocketController {
                 }
 
                 this.socketChannel
-                    .emit(`download_provider.download${task.getState()}`, file.raw());
+                    .emit(`download_provider.download${task.getState()}`, task.raw());
 
             },
             DOWNLOAD_GROUP_YOUTUBE
