@@ -5,3 +5,4 @@ media
 tmp
 logs/*
 src/etc/config.ts
+.vscode

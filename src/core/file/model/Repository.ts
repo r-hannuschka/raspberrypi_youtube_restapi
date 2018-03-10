@@ -7,6 +7,8 @@ export class FileRepository {
 
     private dbProvider: Database;
 
+    private TABLE_FILE = "file";
+
     private TABLE_VIDEO = "video";
 
     constructor() {
@@ -73,10 +75,10 @@ export class FileRepository {
     public async addFile(file: IFile): Promise<any>
     {
         const query = `
-            INSERT INTO ${this.TABLE_VIDEO}
-            (name, description, image, file, type)
+            INSERT INTO ${this.TABLE_FILE}
+            (name, file, path)
             VALUES(
-                :name, :description, :image, :file, :type)
+                :name, :file, :path)
         `;
 
         return this.dbProvider.query( query, file.raw());
@@ -88,7 +90,7 @@ export class FileRepository {
             INSERT INTO ${this.TABLE_VIDEO}
             (name, description, image, file, path)
             VALUES(
-                :name, :description, :image, :file, :type: )
+                :name, :description, :image, :file, :path)
         `;
 
         return this.dbProvider.query( query, video.raw());

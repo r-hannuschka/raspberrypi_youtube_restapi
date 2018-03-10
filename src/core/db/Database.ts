@@ -42,9 +42,13 @@ export class Database {
     public async query(query: string, args: any = {}): Promise<any[]> {
         const connection = this.getConnection();
         const dbQuery: Promise<any[]> = new Promise( (resolve, reject) => {
-            connection.query(query, args, (err, rows: any[]) => {
+            const q = connection.query(query, args, (err, rows: any[]) => {
                 if ( err ) {
-                    reject(err);
+                    const errorData = {
+                        message: err,
+                        query: q.sql
+                    }
+                    reject(errorData);
                     return;
                 }
                 resolve(rows);
@@ -55,7 +59,7 @@ export class Database {
 
     private connect() {
 
-        const dbConfig = this.configProvider.get('maria_db');
+        const dbConfig = this.configProvider.get("maria_db");
 
         try {
             this.connection = new Client({
@@ -68,10 +72,10 @@ export class Database {
             const logMessage = `
                 db connection error:
                 ${__filename}
-                username: ${dbConfig['username']},
-                password: ${dbConfig['password']},
-                host    : ${dbConfig['host']},
-                database: ${dbConfig['database']}`;
+                username: ${dbConfig.username},
+                password: ${dbConfig.password},
+                host    : ${dbConfig.host},
+                database: ${dbConfig.database}`;
 
             this.logProvider
                 .log(Log.LOG_DEBUG, logMessage);

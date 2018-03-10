@@ -1,5 +1,5 @@
-import { File, FileManager, VideoFile } from "@app-core/file";
-import { downloadImageFile, ITaskData, IYoutubeFile } from "rh-download";
+import { File, FileManager, VideoFile  } from "@app-core/file";
+import { downloadImageFile, IFileData, IYoutubeFile } from "rh-download";
 import { Log } from "rh-utils";
 
 export function saveYoutubeVideo(youtubeFile: IYoutubeFile)
@@ -15,19 +15,22 @@ export function saveYoutubeVideo(youtubeFile: IYoutubeFile)
     videoFile.setPath( youtubeFile.getDestination() );
 
     fileService.add(videoFile)
-        .then( (): Promise<ITaskData> => {
+        .then( (): Promise<IFileData> => {
+
             if ( ! youtubeFile.getImage() ) {
                 // set default image and resolve this shit
                 // so we allways update this
                 return Promise.reject("no image code");
             }
+
             return downloadImageFile(youtubeFile.getName(), youtubeFile.getImage());
         })
-        .then( (data: ITaskData) => {
+        .then( (data: IFileData) => {
+
             const image = new File();
-            image.setFile(data.file.fileName);
-            image.setName(data.file.title);
-            image.setPath(data.file.path);
+            image.setFile(data.fileName);
+            image.setName(data.title);
+            image.setPath(data.path);
 
             return fileService.add(image);
         })
