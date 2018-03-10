@@ -35,10 +35,13 @@ export class FileManager
         return this.repository.addFile(file as IFile);
     }
 
-    public async update(file: IFileData, data): Promise<IFileData>
+    public async update(file: IFile | IVideoFile, data): Promise<IFileData>
     {
-        // @todo implement
-        return Promise.resolve(file);
+        if (file instanceof VideoFile) {
+            return this.repository.updateVideo(file as IVideoFile, data);
+        }
+
+        return this.repository.updateFile(file as IFile, data);
     }
 
     public delete(file: IFile)

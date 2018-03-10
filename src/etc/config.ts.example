@@ -2,32 +2,12 @@ import * as path from "path";
 import { ILogConfig } from 'rh-utils';
 import { IDownloadConfig } from 'rh-download';
 
+const assets   = path.join(__dirname, "../../assets");
 const baseUrl = "http://localhost:8080";
 const mediaDir = path.join(__dirname, "../../media");
 const logDir   = path.join(__dirname, "../../logs");
 
-const log: ILogConfig = {
-    directories: {
-        default: logDir
-    }
-}
-
-const download: IDownloadConfig = {
-    youtube: {
-        dir: `${mediaDir}/video`
-    },
-    image: {
-        dir: `${mediaDir}/image`
-    }
-}
-
 export const config = {
-    maria_db: {
-        database: "raspberry_youtube",
-        host: "127.0.0.1",
-        password: "PASSWORD_MARIA_DB",
-        username: "USERNAME_MARIA_DB"
-    },
     api: {
         youtube: {
             "host": "https://www.googleapis.com",
@@ -39,8 +19,32 @@ export const config = {
             }
         }
     },
-    download,
-    log,
+    data: {
+        youtube: {
+            defaultImage: {
+                file: "yt_preview_image.png",
+                path: assets
+            }
+        }
+    },
+    maria_db: {
+        database: "raspberry_youtube",
+        host: "127.0.0.1",
+        password: "PASSWORD_MARIA_DB",
+        username: "USERNAME_MARIA_DB"
+    },
+    download: {
+        keepNameAsFilename: false,
+        paths: {
+            image: `${mediaDir}/image`,
+            youtube: `${mediaDir}/video`
+        }
+    },
+    log: {
+        directories: {
+            default: logDir
+        }
+    },
     web: {
         baseUrl,
         media: {

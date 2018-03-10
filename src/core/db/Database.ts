@@ -42,11 +42,10 @@ export class Database {
     public async query(query: string, args: any = {}): Promise<any[]> {
         const connection = this.getConnection();
         const dbQuery: Promise<any[]> = new Promise( (resolve, reject) => {
-            const q = connection.query(query, args, (err, rows: any[]) => {
+            connection.query(query, args, (err, rows: any[]) => {
                 if ( err ) {
                     const errorData = {
-                        message: err,
-                        query: q.sql
+                        message: err
                     }
                     reject(errorData);
                     return;

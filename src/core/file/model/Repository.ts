@@ -1,5 +1,6 @@
 import { Database } from "@app-core";
 import { IFile, IVideoFile } from "../api";
+import { IDataNode } from "rh-utils";
 
 export class FileRepository {
 
@@ -96,32 +97,36 @@ export class FileRepository {
         return this.dbProvider.query( query, video.raw());
     }
 
-    /**
-     *
-     *
-     * @protected
-     * @param {IFile} file
-     * @returns {Promise<any>}
-     * @memberof FileRepository
-     */
-    protected async update(file: IFile): Promise<any>
+    public async updateFile(file: IFile, data): Promise<any>
     {
-        /*
-        const raw: IDataNode = file.raw();
-        let data: string = "";
-
-        Object.keys(raw).forEach( (col) => {
-            const value = this.dbProvider.getConnection().escape(raw[col]);
-            data += data.length ? "," : "";
-            data += `${col}='${value}'`;
-        });
-
         const query = `
-            UPDATE ${this.table}
-            SET ${data}
-            WHERE video_id=${file.getId()}`;
+            UPDATE ${this.TABLE_FILE}
+            SET ${this.parseUpdateData(data)}
+            WHERE id=${file.getId()}`;
 
         return this.dbProvider.query(query);
-        */
+    }
+
+    public async updateVideo(video: IVideoFile, data): Promise<any>
+    {
+        const query = `
+            UPDATE ${this.TABLE_VIDEO}
+            SET ${this.parseUpdateData(data)}
+            WHERE id=${video.getId()}`;
+
+        return this.dbProvider.query(query);
+    }
+
+    private parseUpdateData(data: IDataNode): string
+    {
+        let updateData: string = "";
+
+        Object.keys(data).forEach( (col) => {
+            const value = this.dbProvider.getConnection().escape(data[col]);
+            updateData += data.length ? "," : "";
+            updateData += `${col}=${value}`;
+        });
+
+        return updateData;
     }
 }

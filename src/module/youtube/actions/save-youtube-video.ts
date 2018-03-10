@@ -4,8 +4,8 @@ import { Log } from "rh-utils";
 
 export function saveYoutubeVideo(youtubeFile: IYoutubeFile)
 {
-    const fileService = FileManager.getInstance();
-    const logService  = Log.getInstance();
+    const fileService   = FileManager.getInstance();
+    const logService    = Log.getInstance();
 
     // create video file
     const videoFile: VideoFile = new VideoFile();
@@ -15,27 +15,22 @@ export function saveYoutubeVideo(youtubeFile: IYoutubeFile)
     videoFile.setPath( youtubeFile.getDestination() );
 
     fileService.add(videoFile)
-        .then( (): Promise<IFileData> => {
-
+        .then( (response: any): Promise<IFileData> => {
+            videoFile.setId(response.info.insertId);
             if ( ! youtubeFile.getImage() ) {
-                // set default image and resolve this shit
-                // so we allways update this
-                return Promise.reject("no image code");
+                Promise.resolve("no image");
             }
-
             return downloadImageFile(youtubeFile.getName(), youtubeFile.getImage());
         })
         .then( (data: IFileData) => {
-
             const image = new File();
             image.setFile(data.fileName);
-            image.setName(data.title);
+            image.setName(data.name);
             image.setPath(data.path);
-
             return fileService.add(image);
         })
-        .then ( (info: any) => {
-            // @todo update file
+        .then ( (response: any) => {
+            return fileService.update(videoFile, {image: response.info.insertId});
         })
         .catch ( (error) => {
             if ( error instanceof Error ) {
