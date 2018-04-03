@@ -18,7 +18,7 @@ export function saveYoutubeVideo(youtubeFile: IYoutubeFile)
         .then( (response: any): Promise<IFileData> => {
             videoFile.setId(response.info.insertId);
             if ( ! youtubeFile.getImage() ) {
-                Promise.resolve("no image");
+                Promise.reject("no image");
             }
             return downloadImageFile(youtubeFile.getName(), youtubeFile.getImage());
         })

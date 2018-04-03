@@ -1,5 +1,4 @@
-import { IChannel } from ".";
-import { IEndpoint } from "./EndpointInterface";
+import { IChannel, IEndpoint } from "@app-libs/socket";
 
 export interface ISocketController extends IEndpoint
 {

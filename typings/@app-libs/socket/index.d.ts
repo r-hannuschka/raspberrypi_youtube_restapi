@@ -64,11 +64,6 @@ declare module '@app-libs/socket' {
         execute(request);
     }
 
-    interface ISocketController extends IEndpoint
-    {
-        setChannel( channel: IChannel ): void;
-    }
-
     interface IEndpoint {
 
         execute(data: any): void;

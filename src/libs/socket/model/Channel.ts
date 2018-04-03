@@ -93,7 +93,8 @@ export class Channel implements IChannel {
      * @param {any} done
      * @memberof Channel
      */
-    public execute(data) {
+    public execute(data)
+    {
         this.endpoint.execute(data);
     }
 }

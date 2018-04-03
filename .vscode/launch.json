@@ -4,12 +4,22 @@
     // Weitere Informationen finden Sie unter https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
+            "name": "Run Mocha",
             "type": "node",
             "request": "launch",
-            "address": "localhost",
-            "name": "Attach",
-            "port": 8080
+            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "stopOnEntry": false,
+            "args": [
+                "--timeout",
+                "999999",
+                "--colors",
+                "--compilers",
+                "ts-node/register",
+                "./tests/omx.spec.ts"
+            ],
+            "internalConsoleOptions": "openOnSessionStart"
         }
     ]
 }

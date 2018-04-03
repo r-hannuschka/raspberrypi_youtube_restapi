@@ -1,4 +1,5 @@
-import { IChannel, ISocketController } from "@app-libs/socket";
+import { ISocketController } from "@app-core/module";
+import { IChannel } from "@app-libs/socket";
 import {
     DOWNLOAD_GROUP_YOUTUBE,
     DOWNLOAD_STATE_END,

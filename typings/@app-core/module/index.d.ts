@@ -1,6 +1,6 @@
 declare module '@app-core/module' {
 
-    import { ISocketController, Socket } from "@app-libs/socket";
+    import { Socket, IChannel, IEndpoint } from "@app-libs/socket";
     import { Request, Response, Router } from "express";
 
     interface RouterInterface {
@@ -12,6 +12,11 @@ declare module '@app-core/module' {
     interface ControllerInterface
     {
         execute( req: Request, res: Response);
+    }
+
+    interface ISocketController extends IEndpoint
+    {
+        setChannel(channel: IChannel);
     }
 
     abstract class Module {

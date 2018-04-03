@@ -1,3 +1,2 @@
-export * from './api/ControllerInterface';
-export * from './api/RouteInterface';
-export * from './Module';
+export * from "./api";
+export * from "./Module";

@@ -11,19 +11,21 @@
     "copy": "npm run copy:config",
     "copy:config": "copy ./src/**/etc/config.json dist",
     "start": "npm run build:dev && npm run server:start & npm run ts:watch",
-    "test": "mocha -r ts-node/register src/test/**/*Test.ts",
+    "test": "mocha -r ts-node/register src/**/*.spec.ts",
     "server:start": "node ./bin/run",
     "server:restart": "node ./bin/stop && node ./bin/run",
     "ts:build-dev": "npm run ts:lint && npm run ts:compile",
     "ts:compile": "echo '' > logs/ts-error.log && tsc 1>>logs/ts-error.log || echo 'error: ts-compile, see logs/ts-error.log for more informations'",
     "ts:lint": "tslint './src/**/*.ts' 2>&1 1>>logs/ts-lint-error.log || echo 'error: tslint, see logs/ts-lint-error.log for more infomations'",
-    "ts:watch": "nodemon --watch ./src --ext ts --exec \"npm run ts:build-dev\""
+    "ts:watch": "nodemon --watch ./src --ext ts --exec \"npm run ts:build-dev\"",
+    "test-debug": "mocha --inspect-brk -r ts-node/register ./src/**/*.spec.ts --watch --watch-extensions ts"
   },
   "author": "Ralf Hannuschka",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.17.2",
     "cookie-parser": "^1.4.3",
+    "dbus-native": "^0.2.5",
     "errorhandler": "^1.5.0",
     "express": "^4.15.4",
     "mariasql": "^0.2.6",
@@ -31,8 +33,9 @@
     "morgan": "^1.8.2",
     "request": "^2.81.0",
     "request-promise-native": "^1.0.4",
-    "rh-download": "file:../../node_packages/rh-download",
-    "rh-utils": "file:../../node_packages/rh-utils"
+    "rh-download": "git+https://git@github.com/r-hannuschka/rh-download",
+    "rh-utils": "git+https://git@github.com/r-hannuschka/rh-utils",
+    "socket.io": "^2.1.0"
   },
   "devDependencies": {
     "@types/body-parser": "1.16.5",
@@ -49,6 +52,7 @@
     "karma-chai": "0.1.0",
     "karma-mocha-reporter": "2.2.4",
     "mocha": "3.5.0",
+    "mock-spawn": "^0.2.6",
     "nock": "^9.1.10",
     "nodemon": "1.11.0",
     "rimraf": "2.6.1",

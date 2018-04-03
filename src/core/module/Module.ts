@@ -1,7 +1,7 @@
+import { Socket } from "@app-libs/socket";
 import { Request, Response, Router } from "express";
-import { ControllerInterface } from "./api";
 import { PubSub } from "rh-utils";
-import { ISocketController, Socket } from "@app-libs/socket";
+import { ControllerInterface, ISocketController } from "./api";
 
 export abstract class Module {
     /**
@@ -90,7 +90,6 @@ export abstract class Module {
     protected bootstrap() {
         this.configureRouter();
     }
-
 
     /**
      *
