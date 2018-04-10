@@ -32,6 +32,8 @@ declare module "@app-core/video" {
 
         public create(video: IVideoFile): Promise<any>;
 
+        public count(): Promise<number>;
+
         public read(type: string, start?: number, size?: number);
 
         public update(file: IVideoFile, data): Promise<IVideoFileData>;

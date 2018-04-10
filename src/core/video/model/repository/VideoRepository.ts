@@ -40,7 +40,7 @@ export class VideoRepository {
     public async getTotal()
     {
         const rows = await this.dbProvider.query(
-            `SELECT COUNT(video_id) as total FROM ${this.TABLE_VIDEO}`,
+            `SELECT COUNT(*) as total FROM ${this.TABLE_VIDEO}`,
         );
         return rows[0].total;
     }
@@ -59,7 +59,10 @@ export class VideoRepository {
 
         const query = `
             SELECT
-            image, description, id, name
+                description,
+                id,
+                image,
+                name
             FROM ${this.TABLE_VIDEO}
             LIMIT ${start},${limit}
         `;

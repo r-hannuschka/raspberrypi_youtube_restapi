@@ -30,6 +30,11 @@ export class Video
         return this.repository.add(video);
     }
 
+    public async count(): Promise<number>
+    {
+        return this.repository.getTotal();
+    }
+
     public async read(type: string, start, index)
     {
         return this.repository.list(type, start, index);

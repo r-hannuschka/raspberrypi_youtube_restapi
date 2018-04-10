@@ -19,16 +19,19 @@ export class List implements ControllerInterface
         const start = page && page > 0 ? (page - 1) * limit : page;
 
         try {
-            const result = await this.repository.read("", start, 100);
+            const result = await this.repository.read("", start, limit);
+            const total  = await this.repository.count();
             status = 200;
             response = { data: {
-                total: 20,
+                total,
                 videos: result
             },
             success: true
         };
         } catch ( error ) {
-            console.log ( error.message );
+
+            console.log(error);
+
             status = 500;
             response = {
                 data: {},

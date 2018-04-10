@@ -1,5 +1,4 @@
 import { Video, VideoFile  } from "@app-core/video";
-import * as path from "path";
 import { downloadImageFile, IFileData, IYoutubeFile } from "rh-download";
 import { Config, Log } from "rh-utils";
 
