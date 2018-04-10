@@ -4,5 +4,3 @@ export const FILE_TYPE_VIDEO   = "video";
 
 export * from "./FileDataInterface";
 export * from "./FileInterface";
-export * from "./VideoFile";
-export * from "./VideoFileData";

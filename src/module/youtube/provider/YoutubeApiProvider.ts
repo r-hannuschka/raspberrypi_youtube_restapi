@@ -7,7 +7,7 @@ export class YoutubeApiProvider extends HttpProvider {
 
     constructor() {
         super();
-        this.api = Config.getInstance().get('api.youtube') as ConfigInterface;
+        this.api = Config.getInstance().get("api.youtube") as ConfigInterface;
     }
 
     /**

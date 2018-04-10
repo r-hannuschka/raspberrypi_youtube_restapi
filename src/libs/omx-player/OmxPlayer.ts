@@ -149,7 +149,7 @@ export class OmxPlayer
      * @param {string} file
      * @memberof OmxPlayer
      */
-    private createOmxProcess(file: string): ChildProcess
+    private createOmxProcess(file: string)
     {
         const options: string[] = [
             "--dbus_name", OmxDbus.DBUS_OMX_PLAYER_DESTINATION

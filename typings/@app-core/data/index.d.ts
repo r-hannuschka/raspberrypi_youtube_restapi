@@ -1,4 +1,4 @@
-declare module "@app-core/file" {
+declare module "@app-core/data/file" {
 
     interface IFileData 
     {
@@ -6,16 +6,18 @@ declare module "@app-core/file" {
         file: string;
         id?: number;
         image?: string;
+        path: string;
         name: string;
         type: string;
     }
 
-    class FileManager
+    interface IFile
     {
-        public static getInstance(): FileManager;
-        public add(file: File): Promise<any>;
-        public update(file: File, data): Promise<File>;
-        public delete(file: File);
+        getFile(): string;
+        getId(): number;
+        getName(): string;
+        getPath(): string;
+        raw(): IFileData
     }
 
     class File {
@@ -27,12 +29,6 @@ declare module "@app-core/file" {
         setId(id: number): number;
         setName(name: string);
         setPath(path: string);
-    }
-
-    class VideoFile extends File {
-        setDescription(desc: string);
-        setImage(image: File | string);
-        getDescription(): string;
-        getImage(): File
+        raw(): IFileData;
     }
 }

@@ -3,13 +3,13 @@ import * as bodyParser from "body-parser";
 import * as cookieParser from "cookie-parser";
 import * as express from "express";
 import * as logger from "morgan";
-import * as path from "path";
 import { SocketIO } from "socket.io";
 
 import errorHandler = require("errorhandler");
 
-import { Config } from "rh-utils";
-import { config as configData } from "./etc/config";
+import { DownloadModule } from "rh-download";
+import { Config, Log } from "rh-utils";
+import { appConfig, downloadConfig, logConfig } from "./config";
 import { VideoModule, YoutubeModule } from "./module";
 
 /**
@@ -47,9 +47,13 @@ export class Server {
     // create expressjs application
     this.app = express();
 
+    // configure modules
+    Config.getInstance().import(appConfig);
+    DownloadModule.configure(downloadConfig);
+    Log.configure(logConfig);
+
     // configure application
     this.config();
-    Config.getInstance().import(configData);
     this.initializeModules();
   }
 
@@ -73,7 +77,8 @@ export class Server {
   public config() {
 
     // this.app.use(express.static(path.join(__dirname, "public")));
-    this.app.use("/media", express.static(path.join(__dirname, "../media")));
+    this.app.use("/media/image", express.static(
+      Config.getInstance().get("DownloadModule.paths.image")));
 
     // use logger middleware
     this.app.use(logger("dev"));

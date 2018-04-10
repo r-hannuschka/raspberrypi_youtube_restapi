@@ -1,13 +1,13 @@
-import { FileRepository } from "@app-core/file/model";
 import { ControllerInterface } from "@app-core/module";
+import { Video } from "@app-core/video";
 import { Request, Response } from "express";
 
 export class List implements ControllerInterface
 {
-    private repository: FileRepository;
+    private repository: Video;
 
     constructor() {
-        this.repository = FileRepository.getInstance();
+        this.repository = Video.getInstance();
     }
 
     public async execute(req: Request, res: Response)
@@ -19,10 +19,16 @@ export class List implements ControllerInterface
         const start = page && page > 0 ? (page - 1) * limit : page;
 
         try {
-            const result = await this.repository.list(start, limit);
+            const result = await this.repository.read("", start, 100);
             status = 200;
-            response = { success: true, data: result, error: null };
+            response = { data: {
+                total: 20,
+                videos: result
+            },
+            success: true
+        };
         } catch ( error ) {
+            console.log ( error.message );
             status = 500;
             response = {
                 data: {},

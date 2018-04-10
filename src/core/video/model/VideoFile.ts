@@ -1,9 +1,8 @@
-import { IFileData, IVideoFile, IVideoFileData } from "../api";
-import { File } from "./File";
+import { File, IFileData } from "@app-core/data/file";
+import { IVideoFile, IVideoFileData } from "../api";
 
 export class VideoFile extends File implements IVideoFile
 {
-
     private description: string;
 
     private image: string;

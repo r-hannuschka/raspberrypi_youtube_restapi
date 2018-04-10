@@ -1,11 +1,12 @@
-import { File, FileManager, VideoFile  } from "@app-core/file";
+import { Video, VideoFile  } from "@app-core/video";
+import * as path from "path";
 import { downloadImageFile, IFileData, IYoutubeFile } from "rh-download";
-import { Log } from "rh-utils";
+import { Config, Log } from "rh-utils";
 
 export function saveYoutubeVideo(youtubeFile: IYoutubeFile)
 {
-    const fileService   = FileManager.getInstance();
-    const logService    = Log.getInstance();
+    const videoService = Video.getInstance();
+    const logService  = Log.getInstance();
 
     // create video file
     const videoFile: VideoFile = new VideoFile();
@@ -14,7 +15,7 @@ export function saveYoutubeVideo(youtubeFile: IYoutubeFile)
     videoFile.setName( youtubeFile.getName() );
     videoFile.setPath( youtubeFile.getDestination() );
 
-    fileService.add(videoFile)
+    videoService.create(videoFile)
         .then( (response: any): Promise<IFileData> => {
             videoFile.setId(response.info.insertId);
             if ( ! youtubeFile.getImage() ) {
@@ -23,18 +24,24 @@ export function saveYoutubeVideo(youtubeFile: IYoutubeFile)
             return downloadImageFile(youtubeFile.getName(), youtubeFile.getImage());
         })
         .then( (data: IFileData) => {
-            const image = new File();
-            image.setFile(data.fileName);
-            image.setName(data.name);
-            image.setPath(data.path);
-            return fileService.add(image);
-        })
-        .then ( (response: any) => {
-            return fileService.update(videoFile, {image: response.info.insertId});
+
+            logService.log(
+                `saveYoutubeData: download image
+                ${JSON.stringify(data, null, 4)}`
+                ,
+                Log.LOG_DEBUG
+            );
+
+            const imgPath = Config.getInstance().get("path.media.image");
+
+            return videoService.update(videoFile, {
+                image: `${imgPath}/${data.fileName}`,
+            });
         })
         .catch ( (error) => {
+            logService.log(error.message, Log.LOG_ERROR);
             if ( error instanceof Error ) {
-                logService.log(error.message, Log.LOG_ERROR);
+                logService.log(error.stack, Log.LOG_ERROR);
             }
         });
 }

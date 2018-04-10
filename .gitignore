@@ -6,5 +6,5 @@ media/*
 .tscache
 tmp
 logs/*
-src/etc/config.ts
 .vscode
+src/config/app.config.ts

@@ -1,4 +1,4 @@
-import { IFileData } from "./FileDataInterface";
+import { IFileData } from "@app-core/data/file";
 
 export interface IVideoFileData extends IFileData
 {
