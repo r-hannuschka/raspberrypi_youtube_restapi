@@ -4,8 +4,9 @@ import { Config, Log } from "rh-utils";
 
 export function saveYoutubeVideo(youtubeFile: IYoutubeFile)
 {
-    const videoService = Video.getInstance();
-    const logService  = Log.getInstance();
+    const videoService  = Video.getInstance();
+    const logService    = Log.getInstance();
+    const configService = Config.getInstance();
 
     // create video file
     const videoFile: VideoFile = new VideoFile();
@@ -13,6 +14,7 @@ export function saveYoutubeVideo(youtubeFile: IYoutubeFile)
     videoFile.setFile( youtubeFile.getFileName() );
     videoFile.setName( youtubeFile.getName() );
     videoFile.setPath( youtubeFile.getDestination() );
+    videoFile.setImage( configService.get("data.youtube.defaultImage"));
 
     videoService.create(videoFile)
         .then( (response: any): Promise<IFileData> => {

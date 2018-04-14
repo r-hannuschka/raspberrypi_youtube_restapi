@@ -76,9 +76,11 @@ export class Server {
    */
   public config() {
 
+    const config = Config.getInstance();
+
     // this.app.use(express.static(path.join(__dirname, "public")));
-    this.app.use("/media/image", express.static(
-      Config.getInstance().get("DownloadModule.paths.image")));
+    this.app.use("/media/assets", express.static(config.get("public.assets")));
+    this.app.use("/media/image" , express.static(config.get("DownloadModule.paths.image")));
 
     // use logger middleware
     this.app.use(logger("dev"));

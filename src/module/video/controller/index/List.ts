@@ -30,8 +30,6 @@ export class List implements ControllerInterface
         };
         } catch ( error ) {
 
-            console.log(error);
-
             status = 500;
             response = {
                 data: {},
