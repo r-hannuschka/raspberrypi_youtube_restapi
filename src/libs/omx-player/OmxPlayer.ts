@@ -152,7 +152,8 @@ export class OmxPlayer
     private createOmxProcess(file: string)
     {
         const options: string[] = [
-            "--dbus_name", OmxDbus.DBUS_OMX_PLAYER_DESTINATION
+            "--dbus_name", OmxDbus.DBUS_OMX_PLAYER_DESTINATION,
+            "--blank"
         ];
 
         this.options.forEach( (value: string, key: string) => {
