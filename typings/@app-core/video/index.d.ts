@@ -39,5 +39,7 @@ declare module "@app-core/video" {
         public update(file: IVideoFile, data): Promise<IVideoFileData>;
 
         public delete(file: IVideoFile);
+
+        public getById(id: number): Promise<IVideoFile>;
     }
 }

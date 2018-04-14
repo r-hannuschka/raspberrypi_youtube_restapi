@@ -31,11 +31,18 @@ export class VideoRepository {
         return this.instance;
     }
 
+    public async getById(id)
+    {
+        const rows = await this.dbProvider.query(
+            `SELECT * FROM ${this.TABLE_VIDEO} WHERE id = ${id}`,
+        );
+        return rows[0];
+    }
+
     /**
      *
-     *
-     * @returns {Promise<number>}
-     * @memberof FileRepository
+     * @returns number
+     * @memberof VideoRepository
      */
     public async getTotal()
     {

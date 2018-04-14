@@ -1,5 +1,5 @@
 import { Module } from "@app-core/module";
-import { List } from "./controller";
+import { List, PlayAction } from "./controller";
 
 export class VideoModule extends Module
 {
@@ -28,6 +28,7 @@ export class VideoModule extends Module
     protected bootstrap()
     {
         this.registerController("index/list", new List());
+        this.registerController("index/play", new PlayAction());
         super.bootstrap();
     }
 }

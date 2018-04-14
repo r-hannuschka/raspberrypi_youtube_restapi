@@ -1,5 +1,6 @@
 import { IVideoFile, IVideoFileData } from "./api";
 import { VideoRepository } from "./model/repository/VideoRepository";
+import { VideoFile } from "@app-core/video";
 
 export class Video
 {
@@ -33,6 +34,21 @@ export class Video
     public async count(): Promise<number>
     {
         return this.repository.getTotal();
+    }
+
+    public async getById(id: string): Promise<IVideoFile>
+    {
+        const videoData: IVideoFileData = await this.repository.getById(id);
+
+        const videoFile = new VideoFile();
+        videoFile.setDescription(videoData.description);
+        videoFile.setName(videoData.name);
+        videoFile.setPath(videoData.path);
+        videoFile.setFile(videoData.file);
+        videoFile.setId(videoData.id);
+        videoFile.setImage(videoData.image);
+
+        return videoFile;
     }
 
     public async read(type: string, start, index)
