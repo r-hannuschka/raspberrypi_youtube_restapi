@@ -1,6 +1,6 @@
+import { VideoFile } from "@app-core/video";
 import { IVideoFile, IVideoFileData } from "./api";
 import { VideoRepository } from "./model/repository/VideoRepository";
-import { VideoFile } from "@app-core/video";
 
 export class Video
 {
