@@ -3,27 +3,41 @@
  * https://github.com/popcornmix/omxplayer
  *
  */
+import { IVideoFile } from "@app-core/video";
 import { ChildProcess, spawn } from "child_process";
 import * as dbus from "dbus-native";
 import * as fs from "fs";
+import { Observable } from "rh-utils";
+import * as OmxApi from "./api/actions";
 import * as OmxDbus from "./api/dbus";
 
-export class OmxPlayer
+export class OmxPlayer extends Observable<any>
 {
     private dbusConnection;
 
     private omxPlayer: ChildProcess;
 
-    private isActive: boolean = false;
+    private active: boolean = false;
 
-    private videoQueue: string[];
+    private videoQueue: IVideoFile[];
 
     private options: Map<string, string>
 
     private static instance: OmxPlayer = new OmxPlayer();
 
+    /**
+     * current playing video file
+     *
+     * @private
+     * @type {IVideoFile}
+     * @memberof OmxPlayer
+     */
+    private video: IVideoFile;
+
     public constructor()
     {
+        super();
+
         if ( OmxPlayer.instance ) {
             throw new Error("could not create instance, use OmxPlayer.getInstance() instead");
         }
@@ -34,6 +48,13 @@ export class OmxPlayer
         return this;
     }
 
+    /**
+     * returns instance of omx player lib
+     *
+     * @static
+     * @returns
+     * @memberof OmxPlayer
+     */
     public static getInstance()
     {
         return OmxPlayer.instance;
@@ -48,6 +69,33 @@ export class OmxPlayer
     public addOption(optionName: string, optionValue: string = "")
     {
         this.options.set(optionName, optionValue)
+    }
+
+    /**
+     * return current video is playing
+     *
+     * @returns {IVideoFile}
+     * @memberof OmxPlayer
+     */
+    public getCurrentPlayingVideo(): IVideoFile
+    {
+        return this.video;
+    }
+
+    /**
+     * return current video queue
+     *
+     * @returns {IVideoFile[]}
+     * @memberof OmxPlayer
+     */
+    public getVideoQueue(): IVideoFile[]
+    {
+        return this.videoQueue;
+    }
+
+    public isActive(): boolean
+    {
+        return this.active;
     }
 
     /**
@@ -85,16 +133,35 @@ export class OmxPlayer
      * @param {string} video
      * @memberof OmxPlayer
      */
-    public play(video: string)
+    public play(video: IVideoFile)
     {
-        if ( this.isActive ) {
+        if ( this.active ) {
             this.videoQueue.push(video);
+            this.publish(
+                {
+                    action: OmxApi.OMX_PLAYER_ACTION_ADD_VIDEO_TO_QUEUE,
+                    video
+                },
+                OmxApi.PUBSUB_TOPIC
+            );
             return;
         }
 
-        this.createOmxProcess(video);
+        this.active = true;
+
+        const videoPath = video.getPath() + "/" + video.getFile();
+        this.video = video;
+
+        this.publish(
+            {
+                action: OmxApi.OMX_PLAYER_ACTION_PLAY_VIDEO,
+                video
+            },
+            OmxApi.PUBSUB_TOPIC
+        );
+
+        this.createOmxProcess(videoPath);
         this.createDBusConnection();
-        this.isActive = true;
     }
 
     /**
@@ -103,12 +170,28 @@ export class OmxPlayer
      * @returns Promise<boolean>
      * @memberof OmxPlayer
      */
-    public stop()
+    public stop(clearQueue = true)
     {
+        if ( clearQueue ) {
+            this.videoQueue = [];
+        }
+
         return this.sendDbusCommand(
             OmxDbus.DBUS_OMX_PLAYER_INTERFACE_PLAYER,
             OmxDbus.DBUS_OMX_PLAYER_MEMBER_STOP
         );
+    }
+
+    /**
+     * stop video and get a new one
+     *
+     * @memberof OmxPlayer
+     */
+    public skipVideo()
+    {
+        if ( this.videoQueue.length ) {
+            this.stop(false);
+        }
     }
 
     /**
@@ -209,8 +292,17 @@ export class OmxPlayer
 
         this.omxPlayer.removeAllListeners();
 
-        this.isActive = false;
-        this.omxPlayer = null;
+        this.publish(
+            {
+                action: OmxApi.OMX_PLAYER_ACTION_CLOSE,
+                video: this.video
+            },
+            OmxApi.PUBSUB_TOPIC
+        );
+
+        this.active         = false;
+        this.video          = null;
+        this.omxPlayer      = null;
         this.dbusConnection = null;
 
         if ( nextVideo ) {
@@ -240,7 +332,7 @@ export class OmxPlayer
      */
     private sendDbusCommand(dbusInterface: string, member: string): Promise<any>
     {
-        if ( ! this.isActive ) {
+        if ( ! this.active ) {
             return Promise.reject("omx player not running");
         }
 

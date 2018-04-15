@@ -1,5 +1,5 @@
 import { Module } from "@app-core/module";
-import { List, Pause, Play, Resume, Stop } from "./controller";
+import { List, Pause, Play, Player, Resume,  Stop } from "./controller";
 
 export class VideoModule extends Module
 {
@@ -35,6 +35,9 @@ export class VideoModule extends Module
         this.registerController("player/play"  , new Play());
         this.registerController("player/stop"  , new Stop());
         this.registerController("player/resume", new Resume());
+
+        // socket controller
+        this.registerSocketController( "video.player", new Player());
 
         super.bootstrap();
     }

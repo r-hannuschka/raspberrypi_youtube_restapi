@@ -3,3 +3,4 @@ export * from "./player/Pause";
 export * from "./player/Play";
 export * from "./player/Resume";
 export * from "./player/Stop";
+export * from "./socket/Player";

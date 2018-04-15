@@ -3,7 +3,7 @@ import { ILogConfig } from 'rh-utils';
 import { IDownloadConfig } from 'rh-download';
 
 const assets   = path.join(__dirname, "../../assets");
-const baseUrl = "http://localhost:8080";
+const baseUrl = "http://192.168.188.200:8080";
 const mediaDir = path.join(__dirname, "../../media");
 const logDir   = path.join(__dirname, "../../logs");
 

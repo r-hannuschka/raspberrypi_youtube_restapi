@@ -22,7 +22,7 @@ export class Play implements ControllerInterface
             const video_id = req.query.video_id;
             const video = await this.videoService.getById(video_id);
 
-            this.omx.play( video.getPath() + "/" + video.getFile() );
+            this.omx.play(video);
 
             status = 200;
             response = {
@@ -34,7 +34,6 @@ export class Play implements ControllerInterface
             res.status(status);
             res.json(response);
         } catch ( e ) {
-            console.log ( e );
             res.status(500);
         }
     }

@@ -54,12 +54,12 @@ export abstract class Module {
     }
 
     /**
-     * register to publish subscribe to get notified on events
+     *
      *
      * @protected
-     * @param {string} event
+     * @param {String} event
      * @param {any} handler
-     * @memberof AbstractModule
+     * @memberof Module
      */
     protected registerEvent(event: string, handler) {
         PubSub.subscribe(event, handler.execute.bind(handler));
@@ -103,9 +103,6 @@ export abstract class Module {
 
         const action: string = req.params.action;
         const controller: string = req.params.controller;
-
-        console.dir( req.params );
-        console.dir( action );
 
         const controllerAction = controller ? `${controller}/${action}` : `index/${action}`;
 

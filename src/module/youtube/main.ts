@@ -1,6 +1,6 @@
 import { Module } from "@app-core/module";
-import { List, Search, DownloadController } from "./controller";
 import { SOCKET_GROUP_NAME } from "./api";
+import { DownloadController, List, Search, } from "./controller";
 
 export class YoutubeModule extends Module
 {

@@ -1,6 +1,7 @@
 import { ControllerInterface } from "@app-core/module";
 import { OmxPlayer } from "@app-libs/omx-player";
 import { Request, Response } from "express";
+import { Log } from "rh-utils";
 
 export class Resume implements ControllerInterface
 {
@@ -26,6 +27,7 @@ export class Resume implements ControllerInterface
             res.status(status);
             res.json(response);
         } catch ( e ) {
+            Log.getInstance().log(e.message, Log.LOG_ERROR);
             res.status(500);
         }
     }
