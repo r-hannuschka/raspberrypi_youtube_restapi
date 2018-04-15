@@ -104,6 +104,9 @@ export abstract class Module {
         const action: string = req.params.action;
         const controller: string = req.params.controller;
 
+        console.dir( req.params );
+        console.dir( action );
+
         const controllerAction = controller ? `${controller}/${action}` : `index/${action}`;
 
         if (!this.controllerMap.has(controllerAction)) {
@@ -125,12 +128,12 @@ export abstract class Module {
     private configureRouter() {
         const baseRoute = `/api/${this.getName()}`;
 
-        // index controller
-        this.router.use(`${baseRoute}/:action`, (req: Request, res: Response) => {
+        this.router.use(`${baseRoute}/:controller/:action`, (req: Request, res: Response) => {
             this.processRequest(req, res);
         });
 
-        this.router.use(`${baseRoute}/:controller/:action?`, (req: Request, res: Response) => {
+        // index controller
+        this.router.use(`${baseRoute}/:action`, (req: Request, res: Response) => {
             this.processRequest(req, res);
         });
     }
