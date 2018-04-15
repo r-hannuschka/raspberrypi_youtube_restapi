@@ -1,5 +1,5 @@
 import { Module } from "@app-core/module";
-import { List, PlayAction } from "./controller";
+import { List, Pause, Play, Resume, Stop } from "./controller";
 
 export class VideoModule extends Module
 {
@@ -27,8 +27,15 @@ export class VideoModule extends Module
      */
     protected bootstrap()
     {
+        // index controller
         this.registerController("index/list", new List());
-        this.registerController("index/play", new PlayAction());
+
+        // omxplayer controller
+        this.registerController("player/pause" , new Pause());
+        this.registerController("player/play"  , new Play());
+        this.registerController("player/stop"  , new Stop());
+        this.registerController("player/resume", new Resume());
+
         super.bootstrap();
     }
 }

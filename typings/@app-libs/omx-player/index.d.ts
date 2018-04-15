@@ -2,6 +2,8 @@ declare module '@app-libs/omx-player' {
 
     export class OmxPlayer
     {
+        public static getInstance(): OmxPlayer;
+
         public addOption(optionName: string, optionValue?: string);
 
         public mute();

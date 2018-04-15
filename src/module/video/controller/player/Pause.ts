@@ -1,16 +1,13 @@
 import { ControllerInterface } from "@app-core/module";
-import { Video } from "@app-core/video";
 import { OmxPlayer } from "@app-libs/omx-player";
 import { Request, Response } from "express";
 
-export class PlayAction implements ControllerInterface
+export class Pause implements ControllerInterface
 {
     private omx: OmxPlayer;
 
-    private videoService = Video.getInstance();
-
     constructor() {
-        this.omx = new OmxPlayer();
+        this.omx = OmxPlayer.getInstance();
     }
 
     public async execute(req: Request, res: Response)
@@ -19,14 +16,7 @@ export class PlayAction implements ControllerInterface
         let response: object;
 
         try {
-            const video_id = req.query.video_id;
-            const video = await this.videoService.getById(video_id);
-
-            console.log ( video.getPath() + "/" + video.getFile() );
-
-            // ich brauch den video namen
-            // und pfad
-            this.omx.play( video.getPath() + "/" + video.getFile() );
+            this.omx.pause();
 
             status = 200;
             response = {
@@ -38,7 +28,6 @@ export class PlayAction implements ControllerInterface
             res.status(status);
             res.json(response);
         } catch ( e ) {
-            console.log ( e );
             res.status(500);
         }
     }

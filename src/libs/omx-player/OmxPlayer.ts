@@ -20,10 +20,23 @@ export class OmxPlayer
 
     private options: Map<string, string>
 
+    private static instance: OmxPlayer = new OmxPlayer();
+
     public constructor()
     {
+        if ( OmxPlayer.instance ) {
+            throw new Error("could not create instance, use OmxPlayer.getInstance() instead");
+        }
+
         this.options = new Map();
         this.videoQueue = [];
+
+        return this;
+    }
+
+    public static getInstance()
+    {
+        return OmxPlayer.instance;
     }
 
     /**
