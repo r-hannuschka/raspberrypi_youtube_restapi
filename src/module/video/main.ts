@@ -1,6 +1,7 @@
 import { Module } from "@app-core/module";
 import {
     List   as IndexList,
+    Mute   as PlayerMute,
     Pause  as PlayerPause,
     Play   as PlayerPlay,
     Player as PlayerSocket,
@@ -39,6 +40,7 @@ export class VideoModule extends Module
         this.registerController("index/list", new IndexList());
 
         // omxplayer controller
+        this.registerController("player/mute"  , new PlayerMute());
         this.registerController("player/pause" , new PlayerPause());
         this.registerController("player/play"  , new PlayerPlay());
         this.registerController("player/stop"  , new PlayerStop());
