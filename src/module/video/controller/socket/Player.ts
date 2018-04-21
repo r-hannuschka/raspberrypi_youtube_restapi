@@ -44,26 +44,31 @@ export class Player implements ISocketController
      */
     public onConnected()
     {
-        const isActive   = this.player.isActive();
-        const video      = this.player.getCurrentPlayingVideo();
-        const videoQueue = this.player.getVideoQueue();
+        const isActive = this.player.isActive();
+        const video    = this.player.getCurrentPlayingVideo();
+        const playlist = this.player.getVideoQueue();
 
         // not empty
         return {
             isActive,
-            video: video ? video : null,
-            videoQueue
+            playlist,
+            video: video ? video : null
         };
     }
 
     private onOmxPlayerMessage(data)
     {
+        const response = {
+            playlist: this.player.getVideoQueue(),
+            video   : this.player.getCurrentPlayingVideo()
+        };
+
         switch (data.action ) {
             case OMX_PLAYER_ACTION_ADD_VIDEO_TO_QUEUE:
-                this.socketChannel.emit("player:add_video", {video: data.video});
+                this.socketChannel.emit("player:add_video", response);
                 break;
             case OMX_PLAYER_ACTION_PLAY_VIDEO:
-                this.socketChannel.emit("player:play", {video: data.video});
+                this.socketChannel.emit("player:play", response);
                 break;
             case OMX_PLAYER_ACTION_CLOSE: // player closed
                 this.socketChannel.emit("player:close", null);

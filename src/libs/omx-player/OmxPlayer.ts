@@ -188,11 +188,11 @@ export class OmxPlayer extends Observable<any>
             return [];
         }
 
-        for (let x = 0, ln = this.videoQueue.length; x < ln; x++) {
-            const video: IVideo = this.videoQueue[x];
+        for (let i = 0, ln = this.videoQueue.length; i < ln; i++) {
+            const video: IVideo = this.videoQueue[i];
 
             if ( video.id === id ) {
-                this.videoQueue.splice(x, 1);
+                this.videoQueue.splice(i, 1);
                 break;
             }
         }

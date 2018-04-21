@@ -16,8 +16,7 @@ export class Remove implements ControllerInterface
         let response: object;
 
         try {
-            const playlist: IVideo[] = this.omx.removeVideoFromQueue(
-                req.get("id"));
+            const playlist: IVideo[] = this.omx.removeVideoFromQueue(req.query.id);
 
             status = 200;
             response = {
