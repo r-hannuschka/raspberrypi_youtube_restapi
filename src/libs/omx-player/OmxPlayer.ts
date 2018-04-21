@@ -7,9 +7,10 @@ import { IVideoFile } from "@app-core/video";
 import { ChildProcess, spawn } from "child_process";
 import * as dbus from "dbus-native";
 import * as fs from "fs";
-import { Observable } from "rh-utils";
+import { Helper, Observable } from "rh-utils";
 import * as OmxApi from "./api/actions";
 import * as OmxDbus from "./api/dbus";
+import { IVideo } from "./api/video.interface";
 
 export class OmxPlayer extends Observable<any>
 {
@@ -19,7 +20,7 @@ export class OmxPlayer extends Observable<any>
 
     private active: boolean = false;
 
-    private videoQueue: IVideoFile[];
+    private videoQueue: IVideo[];
 
     private options: Map<string, string>
 
@@ -29,10 +30,10 @@ export class OmxPlayer extends Observable<any>
      * current playing video file
      *
      * @private
-     * @type {IVideoFile}
+     * @type {IVideo}
      * @memberof OmxPlayer
      */
-    private video: IVideoFile;
+    private video: IVideo;
 
     public constructor()
     {
@@ -77,7 +78,7 @@ export class OmxPlayer extends Observable<any>
      * @returns {IVideoFile}
      * @memberof OmxPlayer
      */
-    public getCurrentPlayingVideo(): IVideoFile
+    public getCurrentPlayingVideo(): IVideo
     {
         return this.video;
     }
@@ -88,7 +89,7 @@ export class OmxPlayer extends Observable<any>
      * @returns {IVideoFile[]}
      * @memberof OmxPlayer
      */
-    public getVideoQueue(): IVideoFile[]
+    public getVideoQueue(): IVideo[]
     {
         return this.videoQueue;
     }
@@ -98,18 +99,33 @@ export class OmxPlayer extends Observable<any>
         return this.active;
     }
 
+    public moveVideoQueueUp(id: string): IVideo[]
+    {
+        // @todo implement
+        return this.videoQueue;
+    }
+
+    public moveVideoQueueDown(id: string): IVideo[]
+    {
+        // @todo implement
+        return this.videoQueue;
+    }
+
     /**
      * mute player
      *
      * @returns Promise<boolean>
      * @memberof OmxPlayer
      */
-    public mute()
+    public mute(): Promise<IVideo>
     {
         return this.sendDbusCommand(
             OmxDbus.DBUS_OMX_PLAYER_INTERFACE_PLAYER,
             OmxDbus.DBUS_OMX_PLAYER_MEMBER_MUTE
-        );
+        ).then( () => {
+            this.video.muted = true;
+            return this.video;
+        });
     }
 
     /**
@@ -118,12 +134,15 @@ export class OmxPlayer extends Observable<any>
      * @returns Promise<boolean>
      * @memberof OmxPlayer
      */
-    public pause()
+    public pause(): Promise<IVideo>
     {
         return this.sendDbusCommand(
             OmxDbus.DBUS_OMX_PLAYER_INTERFACE_PLAYER,
             OmxDbus.DBUS_OMX_PLAYER_MEMBER_PAUSE
-        );
+        ).then( () => {
+            this.video.play  = false;
+            return this.video;
+        });
     }
 
     /**
@@ -135,8 +154,16 @@ export class OmxPlayer extends Observable<any>
      */
     public play(video: IVideoFile)
     {
+        const omxVideo: IVideo = {
+            file: video,
+            id:   Helper.generateId(),
+            muted: false,
+            play: false,
+            queued: true
+        };
+
         if ( this.active ) {
-            this.videoQueue.push(video);
+            this.videoQueue.push(omxVideo);
             this.publish(
                 {
                     action: OmxApi.OMX_PLAYER_ACTION_ADD_VIDEO_TO_QUEUE,
@@ -147,21 +174,29 @@ export class OmxPlayer extends Observable<any>
             return;
         }
 
-        this.active = true;
+        this.playVideo(omxVideo);
+    }
 
-        const videoPath = video.getPath() + "/" + video.getFile();
-        this.video = video;
+    /**
+     * remove video from video queue
+     *
+     * @memberof OmxPlayer
+     */
+    public removeVideoFromQueue(id: string): IVideo[]
+    {
+        if ( ! this.videoQueue.length ) {
+            return [];
+        }
 
-        this.publish(
-            {
-                action: OmxApi.OMX_PLAYER_ACTION_PLAY_VIDEO,
-                video
-            },
-            OmxApi.PUBSUB_TOPIC
-        );
+        for (let x = 0, ln = this.videoQueue.length; x < ln; x++) {
+            const video: IVideo = this.videoQueue[x];
 
-        this.createOmxProcess(videoPath);
-        this.createDBusConnection();
+            if ( video.id === id ) {
+                this.videoQueue.splice(x, 1);
+                break;
+            }
+        }
+        return this.videoQueue;
     }
 
     /**
@@ -170,7 +205,7 @@ export class OmxPlayer extends Observable<any>
      * @returns Promise<boolean>
      * @memberof OmxPlayer
      */
-    public stop(clearQueue = true)
+    public stop(clearQueue = true): Promise<boolean>
     {
         if ( clearQueue ) {
             this.videoQueue = [];
@@ -197,15 +232,18 @@ export class OmxPlayer extends Observable<any>
     /**
      * unmute player
      *
-     * @returns Promise<boolean>
+     * @returns Promise<IVideo>
      * @memberof OmxPlayer
      */
-    public async unmute()
+    public unmute(): Promise<IVideo>
     {
         return this.sendDbusCommand(
             OmxDbus.DBUS_OMX_PLAYER_INTERFACE_PLAYER,
             OmxDbus.DBUS_OMX_PLAYER_MEMBER_UNMUTE
-        );
+        ).then( () => {
+            this.video.muted = false;
+            return this.video;
+        });
     }
 
     /**
@@ -214,12 +252,43 @@ export class OmxPlayer extends Observable<any>
      * @returns Promise<boolean>
      * @memberof OmxPlayer
      */
-    public unpause()
+    public unpause(): Promise<IVideo>
     {
         return this.sendDbusCommand(
             OmxDbus.DBUS_OMX_PLAYER_INTERFACE_PLAYER,
             OmxDbus.DBUS_OMX_PLAYER_MEMBER_PLAY
+        ).then( () => {
+            this.video.play = true;
+            return this.video;
+        });
+    }
+
+    /**
+     * play video in omx player
+     *
+     * @private
+     * @param {IVideo} video
+     * @memberof OmxPlayer
+     */
+    private playVideo(video: IVideo)
+    {
+        video.play   = true;
+        video.queued = false;
+        this.active  = true;
+
+        const videoPath = video.file.getPath() + "/" + video.file.getFile();
+        this.video = video;
+
+        this.publish(
+            {
+                action: OmxApi.OMX_PLAYER_ACTION_PLAY_VIDEO,
+                video
+            },
+            OmxApi.PUBSUB_TOPIC
         );
+
+        this.createOmxProcess(videoPath);
+        this.createDBusConnection();
     }
 
     /**
@@ -306,7 +375,7 @@ export class OmxPlayer extends Observable<any>
         this.dbusConnection = null;
 
         if ( nextVideo ) {
-            this.play(nextVideo);
+            this.playVideo(nextVideo);
         }
     }
 
@@ -356,6 +425,6 @@ export class OmxPlayer extends Observable<any>
                     resolve(true);
                 }
             );
-        })
+        });
     }
 }

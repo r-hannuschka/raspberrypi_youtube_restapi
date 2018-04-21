@@ -34,7 +34,7 @@
     "request": "^2.81.0",
     "request-promise-native": "^1.0.4",
     "rh-download": "git+https://git@github.com/r-hannuschka/rh-download",
-    "rh-utils": "git+https://git@github.com/r-hannuschka/rh-utils",
+    "rh-utils": "git+https://git@github.com/r-hannuschka/rh-utils.git",
     "socket.io": "^2.1.0"
   },
   "devDependencies": {

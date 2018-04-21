@@ -10,52 +10,39 @@ declare module '@app-libs/omx-player' {
     export const OMX_PLAYER_ACTION_STOP_VIDEO;
     export const OMX_PLAYER_ACTION_CLOSE;
 
+    export interface IVideo 
+    {
+        file: IVideoFile;
+        id: string;
+        muted: boolean;
+        play: boolean;
+        queued: boolean;
+    }
+
     export class OmxPlayer extends Observable<any>
     {
         public static getInstance(): OmxPlayer;
 
         public addOption(optionName: string, optionValue?: string);
 
-        public getCurrentPlayingVideo(): IVideoFile;
+        public getCurrentPlayingVideo(): IVideo;
 
-        /**
-         * return current video queue
-         *
-         * @returns {IVideoFile[]}
-         * @memberof OmxPlayer
-         */
-        public getVideoQueue(): IVideoFile[];
+        public getVideoQueue(): IVideo[];
 
         public isActive(): boolean;
 
-        public mute();
+        public mute(): Promise<IVideo>;
 
-        public pause();
+        public pause(): Promise<IVideo>;
 
-        public play(video: IVideoFile);
+        public play(video: IVideoFile): IVideo;
 
-        /**
-         * stop video
-         *
-         * @returns Promise<boolean>
-         * @memberof OmxPlayer
-         */
-        public stop();
-        
+        public removeVideoFromQueue(id: string): IVideo[];
 
-        /**
-         * unmute player
-         *
-         * @returns Promise<boolean>
-         * @memberof OmxPlayer
-         */
-        public unmute();
+        public stop(): Promise<IVideo>;
 
-        /**
-         * resume video playback
-         *
-         * @returns Promise<boolean>
-         */
-        public unpause();
+        public unmute(): Promise<IVideo>;
+
+        public unpause(): Promise<IVideo>;
     }
 }
