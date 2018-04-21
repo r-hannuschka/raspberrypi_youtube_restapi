@@ -8,7 +8,8 @@ import {
 } from "@app-libs/omx-player";
 import { IChannel } from "@app-libs/socket";
 
-export class Player implements ISocketController {
+export class Player implements ISocketController 
+{
 
     private socketChannel: IChannel;
 
@@ -50,7 +51,7 @@ export class Player implements ISocketController {
         // not empty
         return {
             isActive,
-            video: video ? video.raw() : null,
+            video: video ? video : null,
             videoQueue
         };
     }
@@ -59,10 +60,10 @@ export class Player implements ISocketController {
     {
         switch (data.action ) {
             case OMX_PLAYER_ACTION_ADD_VIDEO_TO_QUEUE:
-                this.socketChannel.emit("player:add_video", {video: data.video.raw()});
+                this.socketChannel.emit("player:add_video", {video: data.video});
                 break;
             case OMX_PLAYER_ACTION_PLAY_VIDEO:
-                this.socketChannel.emit("player:play", {video: data.video.raw()});
+                this.socketChannel.emit("player:play", {video: data.video});
                 break;
             case OMX_PLAYER_ACTION_CLOSE: // player closed
                 this.socketChannel.emit("player:close", null);

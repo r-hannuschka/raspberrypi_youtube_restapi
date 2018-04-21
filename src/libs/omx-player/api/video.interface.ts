@@ -1,8 +1,8 @@
-import { IVideoFile } from "@app-core/video";
+import { IVideoFileData } from "@app-core/video";
 
 export interface IVideo {
 
-    file: IVideoFile;
+    data: IVideoFileData;
 
     id: string;
 

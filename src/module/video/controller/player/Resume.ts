@@ -17,7 +17,7 @@ export class Resume implements ControllerInterface
         let response: object;
 
         try {
-            this.omx.unpause();
+            await this.omx.unpause();
 
             status = 200;
             response = {

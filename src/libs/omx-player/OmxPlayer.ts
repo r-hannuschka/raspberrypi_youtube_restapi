@@ -3,7 +3,7 @@
  * https://github.com/popcornmix/omxplayer
  *
  */
-import { IVideoFile } from "@app-core/video";
+import { IVideoFileData } from "@app-core/video";
 import { ChildProcess, spawn } from "child_process";
 import * as dbus from "dbus-native";
 import * as fs from "fs";
@@ -152,10 +152,10 @@ export class OmxPlayer extends Observable<any>
      * @param {string} video
      * @memberof OmxPlayer
      */
-    public play(video: IVideoFile)
+    public play(video: IVideoFileData)
     {
         const omxVideo: IVideo = {
-            file: video,
+            data: video,
             id:   Helper.generateId(),
             muted: false,
             play: false,
@@ -276,7 +276,7 @@ export class OmxPlayer extends Observable<any>
         video.queued = false;
         this.active  = true;
 
-        const videoPath = video.file.getPath() + "/" + video.file.getFile();
+        const videoPath = video.data.path + "/" + video.data.file;
         this.video = video;
 
         this.publish(

@@ -16,7 +16,7 @@ export class Pause implements ControllerInterface
         let response: object;
 
         try {
-            this.omx.pause();
+            await this.omx.pause();
 
             status = 200;
             response = {

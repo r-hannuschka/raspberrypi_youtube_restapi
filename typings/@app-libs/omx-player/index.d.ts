@@ -1,7 +1,7 @@
 
 declare module '@app-libs/omx-player' {
 
-    import { IVideoFile } from "@app-core/video";
+    import { IVideoFileData } from "@app-core/video";
     import { Observable } from "rh-utils";
 
     export const PUBSUB_TOPIC;
@@ -12,7 +12,7 @@ declare module '@app-libs/omx-player' {
 
     export interface IVideo 
     {
-        file: IVideoFile;
+        data: IVideoFileData;
         id: string;
         muted: boolean;
         play: boolean;
@@ -35,7 +35,7 @@ declare module '@app-libs/omx-player' {
 
         public pause(): Promise<IVideo>;
 
-        public play(video: IVideoFile): IVideo;
+        public play(video: IVideoFileData): IVideo;
 
         public removeVideoFromQueue(id: string): IVideo[];
 

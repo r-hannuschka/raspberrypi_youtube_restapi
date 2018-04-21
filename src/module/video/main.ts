@@ -1,5 +1,13 @@
 import { Module } from "@app-core/module";
-import { List, Pause, Play, Player, Resume,  Stop } from "./controller";
+import {
+    List   as IndexList,
+    Pause  as PlayerPause,
+    Play   as PlayerPlay,
+    Player as PlayerSocket,
+    Remove as PlaylistRemove,
+    Resume as PlayerResume,
+    Stop   as PlayerStop,
+} from "./controller";
 
 export class VideoModule extends Module
 {
@@ -28,16 +36,19 @@ export class VideoModule extends Module
     protected bootstrap()
     {
         // index controller
-        this.registerController("index/list", new List());
+        this.registerController("index/list", new IndexList());
 
         // omxplayer controller
-        this.registerController("player/pause" , new Pause());
-        this.registerController("player/play"  , new Play());
-        this.registerController("player/stop"  , new Stop());
-        this.registerController("player/resume", new Resume());
+        this.registerController("player/pause" , new PlayerPause());
+        this.registerController("player/play"  , new PlayerPlay());
+        this.registerController("player/stop"  , new PlayerStop());
+        this.registerController("player/resume", new PlayerResume());
+
+        // playlist controller
+        this.registerController("playlist/remove", new PlaylistRemove());
 
         // socket controller
-        this.registerSocketController( "video.player", new Player());
+        this.registerSocketController( "video.player", new PlayerSocket());
 
         super.bootstrap();
     }

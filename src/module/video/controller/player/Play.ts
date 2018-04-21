@@ -22,7 +22,7 @@ export class Play implements ControllerInterface
             const video_id = req.query.video_id;
             const video = await this.videoService.getById(video_id);
 
-            this.omx.play(video);
+            this.omx.play(video.raw());
 
             status = 200;
             response = {
