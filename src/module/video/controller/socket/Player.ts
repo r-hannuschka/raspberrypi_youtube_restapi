@@ -8,7 +8,7 @@ import {
 } from "@app-libs/omx-player";
 import { IChannel } from "@app-libs/socket";
 
-export class Player implements ISocketController 
+export class Player implements ISocketController
 {
 
     private socketChannel: IChannel;

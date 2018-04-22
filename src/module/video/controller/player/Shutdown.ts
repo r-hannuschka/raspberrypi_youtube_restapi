@@ -2,7 +2,7 @@ import { ControllerInterface } from "@app-core/module";
 import { OmxPlayer } from "@app-libs/omx-player";
 import { Request, Response } from "express";
 
-export class Mute implements ControllerInterface
+export class Shutdown implements ControllerInterface
 {
     private omx: OmxPlayer;
 
@@ -16,7 +16,7 @@ export class Mute implements ControllerInterface
         let response: object;
 
         try {
-            await this.omx.mute();
+            await this.omx.stop();
 
             status = 200;
             response = {

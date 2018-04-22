@@ -1,13 +1,14 @@
 import { Module } from "@app-core/module";
 import {
-    List   as IndexList,
-    Mute   as PlayerMute,
-    Pause  as PlayerPause,
-    Play   as PlayerPlay,
-    Player as PlayerSocket,
-    Remove as PlaylistRemove,
-    Resume as PlayerResume,
-    Stop   as PlayerStop,
+    List     as IndexList,
+    Mute     as PlayerMute,
+    Pause    as PlayerPause,
+    Play     as PlayerPlay,
+    Player   as PlayerSocket,
+    Remove   as PlaylistRemove,
+    Resume   as PlayerResume,
+    Shutdown as PlayerShutdown,
+    Unmute   as PlayerUnmute
 } from "./controller";
 
 export class VideoModule extends Module
@@ -40,11 +41,12 @@ export class VideoModule extends Module
         this.registerController("index/list", new IndexList());
 
         // omxplayer controller
-        this.registerController("player/mute"  , new PlayerMute());
-        this.registerController("player/pause" , new PlayerPause());
-        this.registerController("player/play"  , new PlayerPlay());
-        this.registerController("player/stop"  , new PlayerStop());
-        this.registerController("player/resume", new PlayerResume());
+        this.registerController("player/mute"    , new PlayerMute()     );
+        this.registerController("player/pause"   , new PlayerPause()    );
+        this.registerController("player/play"    , new PlayerPlay()     );
+        this.registerController("player/resume"  , new PlayerResume()   );
+        this.registerController("player/shutdown", new PlayerShutdown() );
+        this.registerController("player/unmute"  , new PlayerUnmute()   );
 
         // playlist controller
         this.registerController("playlist/remove", new PlaylistRemove());

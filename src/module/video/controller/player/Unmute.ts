@@ -2,12 +2,12 @@ import { ControllerInterface } from "@app-core/module";
 import { OmxPlayer } from "@app-libs/omx-player";
 import { Request, Response } from "express";
 
-export class Stop implements ControllerInterface
+export class Unmute implements ControllerInterface
 {
-    private omxPlayer: OmxPlayer;
+    private omx: OmxPlayer;
 
     constructor() {
-        this.omxPlayer = OmxPlayer.getInstance();
+        this.omx = OmxPlayer.getInstance();
     }
 
     public async execute(req: Request, res: Response)
@@ -16,19 +16,17 @@ export class Stop implements ControllerInterface
         let response: object;
 
         try {
-            await this.omxPlayer.stop();
+            await this.omx.unmute();
 
             status = 200;
             response = {
-                data: {
-                },
+                data: {},
                 success: true
             },
 
             res.status(status);
             res.json(response);
         } catch ( e ) {
-            console.log ( e );
             res.status(500);
         }
     }
