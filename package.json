@@ -48,7 +48,7 @@
     "@types/sinon": "^2.3.7",
     "chai": "4.1.1",
     "copy": "0.3.1",
-    "karma": "1.7.1",
+    "karma": "6.3.14",
     "karma-chai": "0.1.0",
     "karma-mocha-reporter": "2.2.4",
     "mocha": "3.5.0",
